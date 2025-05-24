@@ -1,47 +1,27 @@
 <template>
-  <header class="main-header">
-    <div class="header-center">
-      <img src="../assets/vue.svg" alt="Logo associazione" class="header-logo" />
-    </div>
-    <button class="hamburger" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-label="Apri menu">
-      <span :class="{ 'open': menuOpen }"></span>
-      <span :class="{ 'open': menuOpen }"></span>
-      <span :class="{ 'open': menuOpen }"></span>
-    </button>
-    <nav class="main-nav" v-if="menuOpen">
-      <ul>
-        <li><a href="#ginnastica">Ginnastica</a></li>
-        <li><a href="#workshop">Workshop</a></li>
-        <li><a href="#chi-siamo">Chi siamo</a></li>
-        <li><a href="#dove-siamo">Dove siamo</a></li>
-        <li><a href="#contatti">Contatti</a></li>
-      </ul>
-    </nav>
-  </header>
   <div class="home-container">
     <header class="hero">
-      <img class="hero-image" src="../assets/vue.svg" alt="Associazione - Immagine Esemplificativa" />
-      <h1>Benvenuti nell'Associazione</h1>
-      <p class="subtitle">Un luogo dove crescere insieme, condividere passioni e costruire il futuro della nostra comunità.</p>
+      <img class="hero-image" src="../assets/vue.svg" alt="Association - Example image" />
+      <h1>Welcome to the Association</h1>
+      <p class="subtitle">A place to grow together, share passions, and build the future of our community.</p>
     </header>
     <section class="about">
-      <h2>Chi siamo</h2>
+      <h2>About us</h2>
       <p>
-        Siamo un'associazione dedicata a promuovere iniziative sociali, culturali e ricreative per tutte le età. La nostra missione è creare uno spazio accogliente e inclusivo per tutti.
+        We are an association dedicated to promoting social, cultural, and recreational initiatives for all ages. Our mission is to create a welcoming and inclusive space for everyone.
       </p>
-      <img class="about-image" src="../assets/vue.svg" alt="Chi siamo - Immagine Esemplificativa" />
+      <img class="about-image" src="../assets/vue.svg" alt="About us - Example image" />
     </section>
     <section class="cta">
-      <h2>Vuoi saperne di più?</h2>
-      <p>Contattaci o vieni a trovarci per scoprire tutte le nostre attività!</p>
-      <button class="cta-button">Contattaci</button>
+      <h2>Want to know more?</h2>
+      <p>Contact us or come visit to discover all our activities!</p>
+      <RouterLink to="/contacts" class="cta-button">Contact us</RouterLink>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-const menuOpen = ref(false)
+import { RouterLink } from 'vue-router'
 </script>
 
-<!-- Gli stili sono in style.css -->
+<!-- Styles are in style.css -->
