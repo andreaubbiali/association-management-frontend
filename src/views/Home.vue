@@ -1,4 +1,9 @@
 <template>
+  <header class="main-header">
+    <div class="header-center">
+      <img src="../assets/vue.svg" alt="Logo associazione" class="header-logo" />
+    </div>
+  </header>
   <div class="home-container">
     <header class="hero">
       <img class="hero-image" src="../assets/vue.svg" alt="Associazione - Immagine Esemplificativa" />
