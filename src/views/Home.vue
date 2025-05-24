@@ -3,6 +3,20 @@
     <div class="header-center">
       <img src="../assets/vue.svg" alt="Logo associazione" class="header-logo" />
     </div>
+    <button class="hamburger" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-label="Apri menu">
+      <span :class="{ 'open': menuOpen }"></span>
+      <span :class="{ 'open': menuOpen }"></span>
+      <span :class="{ 'open': menuOpen }"></span>
+    </button>
+    <nav class="main-nav" v-if="menuOpen">
+      <ul>
+        <li><a href="#ginnastica">Ginnastica</a></li>
+        <li><a href="#workshop">Workshop</a></li>
+        <li><a href="#chi-siamo">Chi siamo</a></li>
+        <li><a href="#dove-siamo">Dove siamo</a></li>
+        <li><a href="#contatti">Contatti</a></li>
+      </ul>
+    </nav>
   </header>
   <div class="home-container">
     <header class="hero">
@@ -24,3 +38,10 @@
     </section>
   </div>
 </template>
+
+<script setup>
+import { ref } from 'vue'
+const menuOpen = ref(false)
+</script>
+
+<!-- Gli stili sono in style.css -->
