@@ -28,6 +28,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: #fff;
 }
 
 h1 {
@@ -63,6 +64,67 @@ button:focus-visible {
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+}
+
+.home-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #fff;
+  color: #222;
+}
+.hero {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.hero-image {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: 1.5rem;
+  border-radius: 1rem;
+  background: #f0f0f0;
+}
+.subtitle {
+  color: #555;
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+}
+.about {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+.about-image {
+  width: 100%;
+  max-width: 260px;
+  margin-top: 1rem;
+  border-radius: 0.7rem;
+  background: #f0f0f0;
+}
+.about h2,
+.cta h2 {
+  color: #2c3e50;
+}
+.cta {
+  text-align: center;
+  background: #f7faff;
+  padding: 2rem 1rem;
+  border-radius: 1rem;
+  color: #222;
+}
+.cta-button {
+  margin-top: 1rem;
+  padding: 0.7rem 2rem;
+  font-size: 1.1rem;
+  background: #2c3e50;
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.cta-button:hover {
+  background: #1a232c;
 }
 
 @media (prefers-color-scheme: light) {
