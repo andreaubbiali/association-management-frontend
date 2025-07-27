@@ -1,43 +1,72 @@
 <template>
-  <AssociatesFilteredTable
-    :associates="associatesData"
-    :items-per-page="15"
-    @edit-associate="handleEdit"
-    @delete-associate="handleDelete"
-  />
+  <div class="associates-page">
+    <!-- Loading State -->
+    <div v-if="loading" class="loading-container">
+      <p>Loading associates...</p>
+    </div>
+
+    <!-- Error State -->
+    <div v-if="error" class="error-container">
+      <p class="error-message">{{ error }}</p>
+      <button @click="clearError" class="error-dismiss">Dismiss</button>
+      <button @click="refreshAssociates" class="retry-button">Retry</button>
+    </div>
+
+    <!-- Success State -->
+    <div v-if="!loading && !error">
+
+      <AssociatesFilteredTable
+        :associates="associates"
+        :items-per-page="15"
+        @edit-associate="handleEdit"
+        @delete-associate="handleDelete"
+      />
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted } from 'vue'
 import AssociatesFilteredTable from '../components/AssociatesFilteredTable.vue'
+import { useAssociates } from '../composables/useAssociates.js'
 
-const associatesData = ref([
-  {
-    "id": 15,
-    "user": {
-      "id": 24,
-      "name": "laura",
-      "lastName": "ubbiali",
-      "birthDate": "1999-04-14",
-      "birthPlace": "calcinate",
-      "fiscalCode": "BBLNDR99D14Blln",
-      "email": "uba99a@gmail.com"
-    },
-    "associationYear": 2025,
-    "createdAt": "2025-07-26T14:53:16.198010Z",
-    "updatedAt": "2025-07-26T14:53:16.198017Z"
-  }
-  // ... more associates
-])
+// Use the associates composable
+const {
+  associates,
+  loading,
+  error,
+  fetchAssociates,
+  deleteAssociate,
+  clearError,
+  refreshAssociates
+} = useAssociates()
+
+// Load associates when component mounts
+onMounted(async () => {
+  await fetchAssociates()
+})
 
 const handleEdit = (associate) => {
   console.log('Edit associate:', associate)
-  // Handle edit logic
+  // TODO: Implement edit functionality
+  // Could open a modal or navigate to edit page
+  // router.push(`/associates/${associate.id}/edit`)
 }
 
-const handleDelete = (associate) => {
-  console.log('Delete associate:', associate)
-  // Handle delete logic
+const handleDelete = async (associate) => {
+  // Show confirmation dialog
+  const confirmed = confirm(`Are you sure you want to delete ${associate.user.name} ${associate.user.lastName}?`)
+  
+  if (confirmed) {
+    try {
+      await deleteAssociate(associate.id)
+      console.log('Associate deleted successfully')
+      // Could show a success toast/notification
+    } catch (err) {
+      console.error('Failed to delete associate:', err)
+      // Error is already handled by the composable
+    }
+  }
 }
 
 </script>
