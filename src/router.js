@@ -5,7 +5,7 @@ import Courses from './views/Courses.vue'
 
 const routes = [
   { path: '/', name: 'Associates', component: Associates },
-  { path: '/user', name: 'Users', component: Users },
+  { path: '/users', name: 'Users', component: Users },
   { path: '/courses', name: 'Courses', component: Courses }
 ]
 

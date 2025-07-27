@@ -1,27 +1,45 @@
 <template>
-  <div class="home-container">
-    <header class="hero">
-      <img class="hero-image" src="../assets/vue.svg" alt="Association - Example image" />
-      <h1>Welcome to the Association</h1>
-      <p class="subtitle">A place to grow together, share passions, and build the future of our community.</p>
-    </header>
-    <section class="about">
-      <h2>About us</h2>
-      <p>
-        We are an association dedicated to promoting social, cultural, and recreational initiatives for all ages. Our mission is to create a welcoming and inclusive space for everyone.
-      </p>
-      <img class="about-image" src="../assets/vue.svg" alt="About us - Example image" />
-    </section>
-    <section class="cta">
-      <h2>Want to know more?</h2>
-      <p>Contact us or come visit to discover all our activities!</p>
-      <RouterLink to="/contacts" class="cta-button">Contact us</RouterLink>
-    </section>
-  </div>
+  <AssociatesFilteredTable
+    :associates="associatesData"
+    :items-per-page="15"
+    @edit-associate="handleEdit"
+    @delete-associate="handleDelete"
+  />
 </template>
 
 <script setup>
-import { RouterLink } from 'vue-router'
+import { ref } from 'vue'
+import AssociatesFilteredTable from '../components/AssociatesFilteredTable.vue'
+
+const associatesData = ref([
+  {
+    "id": 15,
+    "user": {
+      "id": 24,
+      "name": "laura",
+      "lastName": "ubbiali",
+      "birthDate": "1999-04-14",
+      "birthPlace": "calcinate",
+      "fiscalCode": "BBLNDR99D14Blln",
+      "email": "uba99a@gmail.com"
+    },
+    "associationYear": 2025,
+    "createdAt": "2025-07-26T14:53:16.198010Z",
+    "updatedAt": "2025-07-26T14:53:16.198017Z"
+  }
+  // ... more associates
+])
+
+const handleEdit = (associate) => {
+  console.log('Edit associate:', associate)
+  // Handle edit logic
+}
+
+const handleDelete = (associate) => {
+  console.log('Delete associate:', associate)
+  // Handle delete logic
+}
+
 </script>
 
 <!-- Styles are in style.css -->
