@@ -19,19 +19,26 @@ const router = createRouter({
 
 // Navigation guard for authentication
 router.beforeEach((to, from, next) => {
+  console.log('Navigation guard - to:', to.path, 'from:', from.path)
+  
   const token = localStorage.getItem('authToken')
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   
+  console.log('Token exists:', !!token, 'Requires auth:', requiresAuth)
+  
   if (requiresAuth && !token) {
     // Redirect to login if route requires auth and user is not authenticated
+    console.log('Redirecting to login - no token')
     next({
       path: '/login',
       query: { redirect: to.fullPath }
     })
   } else if (to.path === '/login' && token) {
     // Redirect to dashboard if user is already logged in and tries to access login
+    console.log('Redirecting to associates - already logged in')
     next('/associates')
   } else {
+    console.log('Navigation allowed')
     next()
   }
 })

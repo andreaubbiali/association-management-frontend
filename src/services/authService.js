@@ -15,9 +15,16 @@ export const authService = {
     try {
       const response = await api.post('/auth/login', credentials)
       
-      // Store token if login successful
-      if (response.data.token) {
-        localStorage.setItem('authToken', response.data.token)
+      console.log('Login response:', response.data)
+      
+      // Store token if login successful - check multiple possible field names
+      const token = response.data.access
+      
+      if (token) {
+        localStorage.setItem('authToken', token)
+        console.log('Token stored:', token)
+      } else {
+        console.warn('No token found in response:', response.data)
       }
       
       return response.data

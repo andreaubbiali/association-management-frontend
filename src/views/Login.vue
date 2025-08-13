@@ -141,12 +141,25 @@ const handleLogin = async () => {
     
     console.log('Login successful:', response)
     
-    // Redirect to dashboard or intended page
-    const redirectTo = router.currentRoute.value.query.redirect || '/associates'
+    // Wait a bit to ensure token is stored properly
+    await new Promise(resolve => setTimeout(resolve, 100))
     
-    console.log('Redirecting to:', redirectTo)
-
-    await router.push(redirectTo)
+    // Check if token was actually stored
+    const storedToken = localStorage.getItem('authToken')
+    console.log('Token in localStorage after login:', storedToken)
+    
+    if (!storedToken) {
+      error.value = 'Authentication failed - no token received'
+      return
+    }
+    
+    // Force a page reload to ensure the router guard picks up the token
+    window.location.href = '/associates'
+    
+    // Alternative: Use router navigation
+    // const redirectTo = router.currentRoute.value.query.redirect || '/associates'
+    // console.log('Redirecting to:', redirectTo)
+    // await router.replace(redirectTo)
     
   } catch (err) {
     console.error('Login error:', err)
