@@ -15,7 +15,7 @@ export const associatesService = {
    * @param {number} filters.limit - Items per page
    * @returns {Promise} API response
    */
-  async getAssociates(filters = {}) {
+  async searchAssociates(filters = {}) {
     try {
       const params = new URLSearchParams()
       

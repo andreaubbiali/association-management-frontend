@@ -43,13 +43,14 @@
             </option>
           </select>
         </div>
+        <button @click="applyFilters" class="search-btn">Search</button>
         <button @click="clearFilters" class="clear-filters-btn">Clear Filters</button>
       </div>
     </div>
 
     <!-- Results Count -->
     <div class="results-info">
-      <p>Showing {{ filteredAssociates.length }} of {{ associates.length }} associates</p>
+      <p>Showing {{ associates.length }} associates</p>
     </div>
 
     <!-- Table -->
@@ -129,8 +130,8 @@
       </table>
       
       <!-- Empty State -->
-      <div v-if="filteredAssociates.length === 0" class="empty-state">
-        <p>No associates found matching your filters.</p>
+      <div v-if="associates.length === 0" class="empty-state">
+        <p>No associates found.</p>
       </div>
     </div>
 
@@ -188,7 +189,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['edit-associate', 'delete-associate'])
+const emit = defineEmits(['edit-associate', 'delete-associate', 'apply-filters'])
 
 // Reactive data
 const filters = ref({
@@ -208,35 +209,10 @@ const availableYears = computed(() => {
   return years.sort((a, b) => b - a)
 })
 
-const filteredAssociates = computed(() => {
+const sortedAssociates = computed(() => {
   let result = [...props.associates]
 
-  // Apply filters
-  if (filters.value.name) {
-    result = result.filter(associate =>
-      associate.user.name.toLowerCase().includes(filters.value.name.toLowerCase())
-    )
-  }
-
-  if (filters.value.lastName) {
-    result = result.filter(associate =>
-      associate.user.lastName.toLowerCase().includes(filters.value.lastName.toLowerCase())
-    )
-  }
-
-  if (filters.value.email) {
-    result = result.filter(associate =>
-      associate.user.email.toLowerCase().includes(filters.value.email.toLowerCase())
-    )
-  }
-
-  if (filters.value.associationYear) {
-    result = result.filter(associate =>
-      associate.associationYear === parseInt(filters.value.associationYear)
-    )
-  }
-
-  // Apply sorting
+  // Apply sorting only (filtering is done server-side)
   if (sortField.value) {
     result.sort((a, b) => {
       let aValue, bValue
@@ -267,16 +243,21 @@ const filteredAssociates = computed(() => {
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredAssociates.value.length / props.itemsPerPage)
+  return Math.ceil(sortedAssociates.value.length / props.itemsPerPage)
 })
 
 const paginatedAssociates = computed(() => {
   const start = (currentPage.value - 1) * props.itemsPerPage
   const end = start + props.itemsPerPage
-  return filteredAssociates.value.slice(start, end)
+  return sortedAssociates.value.slice(start, end)
 })
 
 // Methods
+const applyFilters = () => {
+  emit('apply-filters', { ...filters.value })
+  currentPage.value = 1
+}
+
 const sortBy = (field) => {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -295,6 +276,8 @@ const clearFilters = () => {
     associationYear: ''
   }
   currentPage.value = 1
+  // Trigger API call to fetch all data without filters
+  emit('apply-filters', { ...filters.value })
 }
 
 const formatDate = (dateString) => {
@@ -313,11 +296,6 @@ const editAssociate = (associate) => {
 const deleteAssociate = (associate) => {
   emit('delete-associate', associate)
 }
-
-// Reset page when filters change
-watch(filters, () => {
-  currentPage.value = 1
-}, { deep: true })
 </script>
 
 <style scoped>
@@ -372,6 +350,22 @@ watch(filters, () => {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.search-btn {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  height: fit-content;
+  margin-right: 0.5rem;
+}
+
+.search-btn:hover {
+  background: #0056b3;
 }
 
 .clear-filters-btn {

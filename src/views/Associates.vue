@@ -20,6 +20,7 @@
         :items-per-page="15"
         @edit-associate="handleEdit"
         @delete-associate="handleDelete"
+        @apply-filters="handleApplyFilters"
       />
     </div>
   </div>
@@ -38,7 +39,8 @@ const {
   fetchAssociates,
   deleteAssociate,
   clearError,
-  refreshAssociates
+  refreshAssociates,
+  applyFilters
 } = useAssociates()
 
 // Load associates when component mounts
@@ -66,6 +68,16 @@ const handleDelete = async (associate) => {
       console.error('Failed to delete associate:', err)
       // Error is already handled by the composable
     }
+  }
+}
+
+const handleApplyFilters = async (filters) => {
+  console.log('Applying filters:', filters)
+  try {
+    await applyFilters(filters)
+    console.log('Filters applied successfully, associates count:', associates.value.length)
+  } catch (err) {
+    console.error('Failed to apply filters:', err)
   }
 }
 

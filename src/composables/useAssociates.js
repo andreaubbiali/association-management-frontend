@@ -31,7 +31,7 @@ export function useAssociates() {
     error.value = null
     
     try {
-      const response = await associatesService.getAssociates(filters.value)
+      const response = await associatesService.searchAssociates(filters.value)
       
       // Handle different response structures
       if (Array.isArray(response)) {
@@ -44,6 +44,7 @@ export function useAssociates() {
         associates.value = []
       }
     } catch (err) {
+      console.error('useAssociates: API call failed:', err)
       error.value = err.response?.data?.message || err.message || 'Failed to fetch associates'
       associates.value = []
     } finally {
