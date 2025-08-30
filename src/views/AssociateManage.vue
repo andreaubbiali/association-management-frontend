@@ -40,6 +40,14 @@
               >
                 {{ associate.annualFeePaid ? 'Paid' : 'Mark as Paid' }}
               </button>
+              <button 
+                v-if="!associate.annualFeePaid"
+                @click="sendFeeEmail" 
+                class="fee-action-btn email-btn"
+                title="Send reminder email for annual fee payment"
+              >
+                📧 Send Email
+              </button>
             </div>
           </div>
           <div class="info-item">
@@ -210,6 +218,16 @@ const markFeePaid = async () => {
     // TODO: Implement mark fee as paid functionality
     // Make API call to update annualFeePaid to true
     // associate.value.annualFeePaid = true
+  }
+}
+
+const sendFeeEmail = async () => {
+  const confirmed = confirm(`Send annual fee reminder email to ${associate.value.user.email}?`)
+
+  if (confirmed) {
+    console.log('Send fee email for associate:', associate.value)
+    // TODO: Implement send email functionality
+    // Make API call to send reminder email for annual fee payment
   }
 }
 </script>
@@ -387,6 +405,15 @@ const markFeePaid = async () => {
   background: #6c757d;
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.fee-action-btn.email-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.fee-action-btn.email-btn:hover {
+  background: #138496;
 }
 
 .action-buttons {
