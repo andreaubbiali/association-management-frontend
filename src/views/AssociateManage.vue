@@ -90,7 +90,7 @@
                 <td>{{ course.type }}</td>
                 <td>{{ formatDate(course.startDate) }}</td>
                 <td>{{ formatDate(course.endDate) }}</td>
-                <td>${{ course.price }}</td>
+                <td>€{{ course.price }}</td>
                 <td class="course-actions">
                   <button @click="manageCourse(course)" class="course-action-btn manage-course-btn">
                     Manage
