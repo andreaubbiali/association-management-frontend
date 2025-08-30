@@ -135,6 +135,67 @@
         </div>
       </div>
     </div>
+
+    <!-- Add Course Modal -->
+    <div v-if="showAddCourseModal" class="modal-overlay" @click="closeAddCourseModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Add Course to Associate</h3>
+          <button @click="closeAddCourseModal" class="modal-close-btn">×</button>
+        </div>
+        
+        <div class="modal-body">
+          <!-- Loading State for Courses -->
+          <div v-if="coursesLoading" class="loading-container">
+            <p>Loading available courses...</p>
+          </div>
+
+          <!-- Error State for Courses -->
+          <div v-if="coursesError" class="error-container">
+            <p class="error-message">{{ coursesError }}</p>
+            <button @click="fetchAvailableCourses" class="retry-button">Retry</button>
+          </div>
+
+          <!-- Course Selection Form -->
+          <form v-if="!coursesLoading && !coursesError" @submit.prevent="submitAddCourse">
+            <div class="form-group">
+              <label for="courseSelect">Course:</label>
+              <select 
+                id="courseSelect" 
+                v-model="selectedCourseId" 
+                class="form-select"
+                required
+              >
+                <option value="">Select a course...</option>
+                <option 
+                  v-for="course in availableCourses" 
+                  :key="course.id" 
+                  :value="String(course.id)"
+                >
+                  {{ formatCourseOption(course) }}
+                </option>
+              </select>
+              
+              <!-- Show selected course info -->
+              <div v-if="selectedCourseId" class="selected-course-info">
+                <small class="text-muted">
+                  Selected: {{ getSelectedCourseName() }}
+                </small>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" @click="closeAddCourseModal" class="btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary" :disabled="!selectedCourseId">
+                Add Course
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -142,6 +203,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAssociateManage } from '../composables/useAssociateManage.js'
+import { coursesService } from '../services/coursesService.js'
 
 // Router
 const route = useRoute()
@@ -158,6 +220,13 @@ const {
   fetchAssociate,
   clearError
 } = useAssociateManage()
+
+// Modal and course selection state
+const showAddCourseModal = ref(false)
+const availableCourses = ref([])
+const coursesLoading = ref(false)
+const coursesError = ref(null)
+const selectedCourseId = ref('')
 
 // Load associate details when component mounts
 onMounted(async () => {
@@ -188,10 +257,69 @@ const formatDate = (dateString) => {
   })
 }
 
-const addCourse = () => {
-  console.log('Add course for associate:', associate.value)
-  // TODO: Implement add course functionality
-  // Could open a modal or navigate to add course form
+const formatCourseOption = (course) => {
+  const startDate = formatDate(course.startDate)
+  const endDate = formatDate(course.endDate)
+  return `${course.name} - ${startDate} - ${endDate}`
+}
+
+const getSelectedCourseName = () => {
+  if (!selectedCourseId.value) return ''
+  const selectedCourse = availableCourses.value.find(course => String(course.id) === selectedCourseId.value)
+  return selectedCourse ? formatCourseOption(selectedCourse) : ''
+}
+
+const addCourse = async () => {
+  showAddCourseModal.value = true
+  await fetchAvailableCourses()
+}
+
+const closeAddCourseModal = () => {
+  showAddCourseModal.value = false
+  selectedCourseId.value = ''
+  coursesError.value = null
+}
+
+const fetchAvailableCourses = async () => {
+  coursesLoading.value = true
+  coursesError.value = null
+  
+  try {
+    const response = await coursesService.getActiveCourses()
+    
+    // Handle different response structures
+    if (Array.isArray(response)) {
+      availableCourses.value = response
+    } else if (response.data && Array.isArray(response.data)) {
+      availableCourses.value = response.data
+    } else {
+      availableCourses.value = []
+      coursesError.value = 'Invalid response format'
+    }
+  } catch (err) {
+    console.error('Failed to fetch available courses:', err)
+    coursesError.value = err.response?.data?.message || err.message || 'Failed to fetch courses'
+    availableCourses.value = []
+  } finally {
+    coursesLoading.value = false
+  }
+}
+
+const submitAddCourse = async () => {
+  if (!selectedCourseId.value) {
+    return
+  }
+  
+  const selectedCourse = availableCourses.value.find(course => course.id === parseInt(selectedCourseId.value))
+  
+  if (selectedCourse) {
+    console.log('Add course to associate:', selectedCourse, 'for associate:', associate.value)
+    // TODO: Implement API call to add course to associate
+    // After successful addition, refresh associate data and close modal
+    // await someApiCallToAddCourse(associate.value.id, selectedCourse.id)
+    // await fetchAssociate(associateId)
+    closeAddCourseModal()
+  }
 }
 
 const manageCourse = (course) => {
@@ -542,6 +670,141 @@ const sendFeeEmail = async () => {
   margin: 0 0 1rem 0;
   color: #333;
   font-size: 1.1rem;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  color: #000;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.selected-course-info {
+  margin-top: 0.5rem;
+}
+
+.text-muted {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
 }
 
 /* Responsive design */
