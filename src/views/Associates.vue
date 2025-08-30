@@ -20,6 +20,7 @@
         :items-per-page="5"
         :total-count="totalCount"
         :current-page="filters.page"
+        @manage-associate="handleManage"
         @edit-associate="handleEdit"
         @delete-associate="handleDelete"
         @apply-filters="handleApplyFilters"
@@ -31,8 +32,12 @@
 
 <script setup>
 import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import AssociatesFilteredTable from '../components/AssociatesFilteredTable.vue'
 import { useAssociates } from '../composables/useAssociates.js'
+
+// Router
+const router = useRouter()
 
 // Use the associates composable
 const {
@@ -53,6 +58,12 @@ const {
 onMounted(async () => {
   await fetchAssociates()
 })
+
+const handleManage = (associate) => {
+  console.log('Manage associate:', associate)
+  // Navigate to the manage page for this associate
+  router.push(`/associates/${associate.id}/manage`)
+}
 
 const handleEdit = (associate) => {
   console.log('Edit associate:', associate)
