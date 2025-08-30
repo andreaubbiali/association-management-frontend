@@ -111,11 +111,11 @@
             <td>{{ associate.associationYear }}</td>
             <td class="actions-cell">
               <button
-                @click="editAssociate(associate)"
-                class="action-btn edit-btn"
-                title="Edit Associate"
+                @click="manageAssociate(associate)"
+                class="action-btn manage-btn"
+                title="Manage Associate"
               >
-                Edit
+                Manage
               </button>
             </td>
           </tr>
@@ -177,7 +177,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['edit-associate', 'delete-associate', 'apply-filters', 'page-change'])
+const emit = defineEmits(['manage-associate', 'delete-associate', 'apply-filters', 'page-change'])
 
 // Reactive data
 const filters = ref({
@@ -256,8 +256,8 @@ const formatDate = (dateString) => {
   })
 }
 
-const editAssociate = (associate) => {
-  emit('edit-associate', associate)
+const manageAssociate = (associate) => {
+  emit('manage-associate', associate)
 }
 
 const deleteAssociate = (associate) => {
@@ -429,12 +429,12 @@ const goToPreviousPage = () => {
   font-weight: 500;
 }
 
-.edit-btn {
+.manage-btn {
   background: #007bff;
   color: white;
 }
 
-.edit-btn:hover {
+.manage-btn:hover {
   background: #0056b3;
 }
 
