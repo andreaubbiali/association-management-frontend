@@ -26,6 +26,23 @@
         <h2>Associate Information</h2>
         <div class="info-grid">
           <div class="info-item">
+            <label>Annual fee paid:</label>
+            <div class="fee-status-container">
+              <span class="fee-status" :class="{ 'paid': associate.annualFeePaid, 'unpaid': !associate.annualFeePaid }">
+                {{ associate.annualFeePaid ? '✓' : '✗' }}
+              </span>
+              <button 
+                @click="markFeePaid" 
+                :disabled="associate.annualFeePaid" 
+                class="fee-action-btn"
+                :class="{ 'disabled': associate.annualFeePaid }"
+                :title="associate.annualFeePaid ? 'Fee already paid' : 'Mark fee as paid'"
+              >
+                {{ associate.annualFeePaid ? 'Paid' : 'Mark as Paid' }}
+              </button>
+            </div>
+          </div>
+          <div class="info-item">
             <label>ID:</label>
             <span>{{ associate.id }}</span>
           </div>
@@ -184,6 +201,17 @@ const removeCourse = async (course) => {
     // Make API call to remove course from associate
   }
 }
+
+const markFeePaid = async () => {
+  const confirmed = confirm(`Are you sure you want to mark the fee as paid for ${associate.value.user.name}?`)
+
+  if (confirmed) {
+    console.log('Mark fee as paid for associate:', associate.value)
+    // TODO: Implement mark fee as paid functionality
+    // Make API call to update annualFeePaid to true
+    // associate.value.annualFeePaid = true
+  }
+}
 </script>
 
 <style scoped>
@@ -308,6 +336,57 @@ const removeCourse = async (course) => {
   background: #f8f9fa;
   border-radius: 4px;
   border: 1px solid #e9ecef;
+}
+
+.fee-status {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.fee-status.paid {
+  color: #28a745;
+  background: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.fee-status.unpaid {
+  color: #dc3545;
+  background: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.fee-status-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fee-action-btn {
+  padding: 0.375rem 0.75rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #28a745;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.fee-action-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.fee-action-btn.disabled,
+.fee-action-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .action-buttons {
