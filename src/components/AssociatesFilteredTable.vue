@@ -50,7 +50,7 @@
 
     <!-- Results Count -->
     <div class="results-info">
-      <p>Showing {{ associates.length }} associates</p>
+      <p>Showing {{ Math.min(associates.length, props.itemsPerPage) }} of {{ props.totalCount }} associates</p>
     </div>
 
     <!-- Table -->
@@ -100,7 +100,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="associate in paginatedAssociates" :key="associate.id" class="table-row">
+          <tr v-for="associate in associates" :key="associate.id" class="table-row">
             <td>{{ associate.id }}</td>
             <td>{{ associate.user.name }}</td>
             <td>{{ associate.user.lastName }}</td>
@@ -136,17 +136,11 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="totalPages > 1" class="pagination">
+        <!-- Pagination -->
+    <div v-if="props.totalCount > props.itemsPerPage" class="pagination">
       <button
-        @click="currentPage = 1"
-        :disabled="currentPage === 1"
-        class="pagination-btn"
-      >
-        First
-      </button>
-      <button
-        @click="currentPage--"
-        :disabled="currentPage === 1"
+        @click="goToPreviousPage"
+        :disabled="!hasPreviousPage"
         class="pagination-btn"
       >
         Previous
@@ -155,18 +149,11 @@
         Page {{ currentPage }} of {{ totalPages }}
       </span>
       <button
-        @click="currentPage++"
-        :disabled="currentPage === totalPages"
+        @click="goToNextPage"
+        :disabled="!hasNextPage"
         class="pagination-btn"
       >
         Next
-      </button>
-      <button
-        @click="currentPage = totalPages"
-        :disabled="currentPage === totalPages"
-        class="pagination-btn"
-      >
-        Last
       </button>
     </div>
   </div>
@@ -184,12 +171,20 @@ const props = defineProps({
   },
   itemsPerPage: {
     type: Number,
-    default: 10
+    default: 5
+  },
+  totalCount: {
+    type: Number,
+    default: 0
+  },
+  currentPage: {
+    type: Number,
+    default: 1
   }
 })
 
 // Emits
-const emit = defineEmits(['edit-associate', 'delete-associate', 'apply-filters'])
+const emit = defineEmits(['edit-associate', 'delete-associate', 'apply-filters', 'page-change'])
 
 // Reactive data
 const filters = ref({
@@ -201,7 +196,12 @@ const filters = ref({
 
 const sortField = ref('')
 const sortDirection = ref('asc')
-const currentPage = ref(1)
+const currentPage = ref(props.currentPage)
+
+// Watch for currentPage prop changes and update local state
+watch(() => props.currentPage, (newPage) => {
+  currentPage.value = newPage
+}, { immediate: true })
 
 // Computed properties
 const availableYears = computed(() => {
@@ -209,47 +209,21 @@ const availableYears = computed(() => {
   return years.sort((a, b) => b - a)
 })
 
-const sortedAssociates = computed(() => {
-  let result = [...props.associates]
-
-  // Apply sorting only (filtering is done server-side)
-  if (sortField.value) {
-    result.sort((a, b) => {
-      let aValue, bValue
-
-      if (sortField.value.includes('.')) {
-        const [obj, prop] = sortField.value.split('.')
-        aValue = a[obj][prop]
-        bValue = b[obj][prop]
-      } else {
-        aValue = a[sortField.value]
-        bValue = b[sortField.value]
-      }
-
-      if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase()
-        bValue = bValue.toLowerCase()
-      }
-
-      if (sortDirection.value === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
-      } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
-      }
-    })
-  }
-
-  return result
+const totalPages = computed(() => {
+  return Math.ceil(props.totalCount / props.itemsPerPage)
 })
 
-const totalPages = computed(() => {
-  return Math.ceil(sortedAssociates.value.length / props.itemsPerPage)
+const hasNextPage = computed(() => {
+  return currentPage.value < totalPages.value
+})
+
+const hasPreviousPage = computed(() => {
+  return currentPage.value > 1
 })
 
 const paginatedAssociates = computed(() => {
-  const start = (currentPage.value - 1) * props.itemsPerPage
-  const end = start + props.itemsPerPage
-  return sortedAssociates.value.slice(start, end)
+  // Since we're doing server-side pagination, we just return the associates as-is
+  return props.associates
 })
 
 // Methods
@@ -295,6 +269,20 @@ const editAssociate = (associate) => {
 
 const deleteAssociate = (associate) => {
   emit('delete-associate', associate)
+}
+
+const goToNextPage = () => {
+  if (hasNextPage.value) {
+    currentPage.value++
+    emit('page-change', currentPage.value)
+  }
+}
+
+const goToPreviousPage = () => {
+  if (hasPreviousPage.value) {
+    currentPage.value--
+    emit('page-change', currentPage.value)
+  }
 }
 </script>
 
@@ -497,6 +485,16 @@ const deleteAssociate = (associate) => {
 .pagination-btn:disabled {
   background: #6c757d;
   cursor: not-allowed;
+}
+
+.pagination-btn:disabled:hover {
+  background: #6c757d;
+}
+
+.pagination-info {
+  margin: 0 1rem;
+  font-weight: 500;
+  color: #333;
 }
 
 .pagination-info {

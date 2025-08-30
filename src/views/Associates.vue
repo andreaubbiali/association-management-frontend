@@ -17,10 +17,13 @@
 
       <AssociatesFilteredTable
         :associates="associates"
-        :items-per-page="15"
+        :items-per-page="5"
+        :total-count="totalCount"
+        :current-page="filters.page"
         @edit-associate="handleEdit"
         @delete-associate="handleDelete"
         @apply-filters="handleApplyFilters"
+        @page-change="handlePageChange"
       />
     </div>
   </div>
@@ -36,11 +39,14 @@ const {
   associates,
   loading,
   error,
+  totalCount,
+  filters,
   fetchAssociates,
   deleteAssociate,
   clearError,
   refreshAssociates,
-  applyFilters
+  applyFilters,
+  changePage
 } = useAssociates()
 
 // Load associates when component mounts
@@ -78,6 +84,16 @@ const handleApplyFilters = async (filters) => {
     console.log('Filters applied successfully, associates count:', associates.value.length)
   } catch (err) {
     console.error('Failed to apply filters:', err)
+  }
+}
+
+const handlePageChange = async (page) => {
+  console.log('Changing to page:', page)
+  try {
+    await changePage(page)
+    console.log('Page changed successfully, associates count:', associates.value.length)
+  } catch (err) {
+    console.error('Failed to change page:', err)
   }
 }
 

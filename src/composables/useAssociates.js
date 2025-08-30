@@ -10,18 +10,18 @@ export function useAssociates() {
   const associates = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const totalCount = ref(0)
   const filters = ref({
     name: '',
     lastName: '',
     email: '',
     associationYear: '',
     page: 1,
-    limit: 10
+    limit: 5
   })
 
   // Computed properties
   const hasAssociates = computed(() => associates.value.length > 0)
-  const totalCount = computed(() => associates.value.length)
 
   /**
    * Fetch all associates with current filters
@@ -36,17 +36,22 @@ export function useAssociates() {
       // Handle different response structures
       if (Array.isArray(response)) {
         associates.value = response
+        totalCount.value = response.length
       } else if (response.data && Array.isArray(response.data)) {
         associates.value = response.data
+        totalCount.value = response.total || response.data.length
       } else if (response.results && Array.isArray(response.results)) {
         associates.value = response.results
+        totalCount.value = response.total || response.count || response.results.length
       } else {
         associates.value = []
+        totalCount.value = 0
       }
     } catch (err) {
       console.error('useAssociates: API call failed:', err)
       error.value = err.response?.data?.message || err.message || 'Failed to fetch associates'
       associates.value = []
+      totalCount.value = 0
     } finally {
       loading.value = false
     }
@@ -90,22 +95,32 @@ export function useAssociates() {
     error.value = null
   }
 
+  /**
+   * Change page and refetch data
+   * @param {number} page - New page number
+   */
+  const changePage = async (page) => {
+    filters.value.page = page
+    await fetchAssociates()
+  }
+
   return {
     // State
     associates,
     loading,
     error,
     filters,
+    totalCount,
     
     // Computed
     hasAssociates,
-    totalCount,
     
     // Methods
     fetchAssociates,
     applyFilters,
     clearFilters,
     refreshAssociates,
-    clearError
+    clearError,
+    changePage
   }
 }
