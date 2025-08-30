@@ -117,13 +117,6 @@
               >
                 Edit
               </button>
-              <button
-                @click="deleteAssociate(associate)"
-                class="action-btn delete-btn"
-                title="Delete Associate"
-              >
-                Delete
-              </button>
             </td>
           </tr>
         </tbody>
