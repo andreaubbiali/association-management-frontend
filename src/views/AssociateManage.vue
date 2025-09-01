@@ -915,6 +915,7 @@ const sendFeeEmail = async () => {
   border-radius: 4px;
   font-size: 1rem;
   background: white;
+  color: #333;
 }
 
 .form-input {
@@ -924,6 +925,7 @@ const sendFeeEmail = async () => {
   border-radius: 4px;
   font-size: 1rem;
   background: white;
+  color: #333;
 }
 
 .form-select:focus,
