@@ -48,5 +48,23 @@ export const associatesService = {
       throw error
     }
   },
+
+  /**
+   * Add a course to an associate
+   * @param {number} associateId - Associate ID
+   * @param {Object} courseData - Course and payment data
+   * @param {number} courseData.courseId - Course ID
+   * @param {Array} courseData.payments - Payment information array
+   * @returns {Promise} API response
+   */
+  async addCourseToAssociate(associateId, courseData) {
+    try {
+      const response = await api.post(`/associate/${associateId}/course`, courseData)
+      return response.data
+    } catch (error) {
+      console.error('Error adding course to associate:', error)
+      throw error
+    }
+  }
 }
 

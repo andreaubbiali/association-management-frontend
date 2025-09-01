@@ -184,11 +184,91 @@
               </div>
             </div>
 
+            <div class="form-group">
+              <label for="paymentType">Payment Type:</label>
+              <select 
+                id="paymentType" 
+                v-model="paymentType" 
+                class="form-select"
+                required
+              >
+                <option value="">Select payment type...</option>
+                <option value="unique">Unique Payment</option>
+                <option value="trimestral">Trimestral Payment</option>
+              </select>
+            </div>
+
+            <!-- Unique Payment Fields -->
+            <div v-if="paymentType === 'unique'" class="form-group">
+              <label for="uniquePrice">Price (€):</label>
+              <input 
+                id="uniquePrice"
+                v-model="uniquePrice" 
+                type="number" 
+                step="0.01" 
+                min="0"
+                class="form-input"
+                placeholder="Enter the total price"
+                required
+              >
+            </div>
+
+            <!-- Trimestral Payment Fields -->
+            <div v-if="paymentType === 'trimestral'" class="trimestral-payments">
+              <h4>Trimestral Payment Amounts</h4>
+              <div class="trimester-grid">
+                <div class="form-group">
+                  <label for="firstTrimester">1st Trimester (€):</label>
+                  <input 
+                    id="firstTrimester"
+                    v-model="firstTrimesterPrice" 
+                    type="number" 
+                    step="0.01" 
+                    min="0"
+                    class="form-input"
+                    placeholder="First trimester amount"
+                    required
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="secondTrimester">2nd Trimester (€):</label>
+                  <input 
+                    id="secondTrimester"
+                    v-model="secondTrimesterPrice" 
+                    type="number" 
+                    step="0.01" 
+                    min="0"
+                    class="form-input"
+                    placeholder="Second trimester amount"
+                    required
+                  >
+                </div>
+                <div class="form-group">
+                  <label for="thirdTrimester">3rd Trimester (€):</label>
+                  <input 
+                    id="thirdTrimester"
+                    v-model="thirdTrimesterPrice" 
+                    type="number" 
+                    step="0.01" 
+                    min="0"
+                    class="form-input"
+                    placeholder="Third trimester amount"
+                    required
+                  >
+                </div>
+              </div>
+              
+              <!-- Show total for trimestral -->
+              <div v-if="trimestralTotal > 0" class="total-info">
+                <strong>Total: €{{ trimestralTotal.toFixed(2) }}</strong>
+              </div>
+            </div>
+
             <div class="form-actions">
               <button type="button" @click="closeAddCourseModal" class="btn-secondary">
                 Cancel
               </button>
-              <button type="submit" class="btn-primary" :disabled="!selectedCourseId">
+              <button type="submit" class="btn-primary" :disabled="!isFormValid">
                 Add Course
               </button>
             </div>
@@ -200,10 +280,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAssociateManage } from '../composables/useAssociateManage.js'
 import { coursesService } from '../services/coursesService.js'
+import { associatesService } from '../services/associatesService.js'
 
 // Router
 const route = useRoute()
@@ -227,6 +308,13 @@ const availableCourses = ref([])
 const coursesLoading = ref(false)
 const coursesError = ref(null)
 const selectedCourseId = ref('')
+
+// Payment form state
+const paymentType = ref('')
+const uniquePrice = ref('')
+const firstTrimesterPrice = ref('')
+const secondTrimesterPrice = ref('')
+const thirdTrimesterPrice = ref('')
 
 // Load associate details when component mounts
 onMounted(async () => {
@@ -269,6 +357,33 @@ const getSelectedCourseName = () => {
   return selectedCourse ? formatCourseOption(selectedCourse) : ''
 }
 
+// Computed properties for payment form
+const trimestralTotal = computed(() => {
+  const first = parseFloat(firstTrimesterPrice.value) || 0
+  const second = parseFloat(secondTrimesterPrice.value) || 0
+  const third = parseFloat(thirdTrimesterPrice.value) || 0
+  return first + second + third
+})
+
+const isFormValid = computed(() => {
+  if (!selectedCourseId.value || !paymentType.value) return false
+  
+  if (paymentType.value === 'unique') {
+    return uniquePrice.value && parseFloat(uniquePrice.value) > 0
+  }
+  
+  if (paymentType.value === 'trimestral') {
+    return firstTrimesterPrice.value && 
+           secondTrimesterPrice.value && 
+           thirdTrimesterPrice.value &&
+           parseFloat(firstTrimesterPrice.value) > 0 &&
+           parseFloat(secondTrimesterPrice.value) > 0 &&
+           parseFloat(thirdTrimesterPrice.value) > 0
+  }
+  
+  return false
+})
+
 const addCourse = async () => {
   showAddCourseModal.value = true
   await fetchAvailableCourses()
@@ -277,6 +392,11 @@ const addCourse = async () => {
 const closeAddCourseModal = () => {
   showAddCourseModal.value = false
   selectedCourseId.value = ''
+  paymentType.value = ''
+  uniquePrice.value = ''
+  firstTrimesterPrice.value = ''
+  secondTrimesterPrice.value = ''
+  thirdTrimesterPrice.value = ''
   coursesError.value = null
 }
 
@@ -306,19 +426,65 @@ const fetchAvailableCourses = async () => {
 }
 
 const submitAddCourse = async () => {
-  if (!selectedCourseId.value) {
+  if (!isFormValid.value) {
     return
   }
   
   const selectedCourse = availableCourses.value.find(course => course.id === parseInt(selectedCourseId.value))
   
   if (selectedCourse) {
-    console.log('Add course to associate:', selectedCourse, 'for associate:', associate.value)
-    // TODO: Implement API call to add course to associate
-    // After successful addition, refresh associate data and close modal
-    // await someApiCallToAddCourse(associate.value.id, selectedCourse.id)
-    // await fetchAssociate(associateId)
-    closeAddCourseModal()
+    // Prepare the payload based on payment type
+    let payments = []
+    
+    if (paymentType.value === 'unique') {
+      payments = [{
+        paymentType: 'unique',
+        amount: parseFloat(uniquePrice.value)
+      }]
+    } else if (paymentType.value === 'trimestral') {
+      payments = [
+        {
+          paymentType: 'trimestral_first',
+          amount: parseFloat(firstTrimesterPrice.value)
+        },
+        {
+          paymentType: 'trimestral_second',
+          amount: parseFloat(secondTrimesterPrice.value)
+        },
+        {
+          paymentType: 'trimestral_third',
+          amount: parseFloat(thirdTrimesterPrice.value)
+        }
+      ]
+    }
+    
+    const courseData = {
+      courseId: selectedCourse.id,
+      payments: payments
+    }
+    
+    try {
+      // Make API call to add course to associate
+      await associatesService.addCourseToAssociate(associate.value.id, courseData)
+      
+      console.log('Course added successfully:', {
+        associate: associate.value,
+        course: selectedCourse,
+        payments: payments
+      })
+      
+      // Refresh associate data to show the new course
+      await fetchAssociate(associateId)
+      
+      // Close modal
+      closeAddCourseModal()
+      
+    } catch (err) {
+      console.error('Failed to add course to associate:', err)
+      // Handle error - could show a notification or error message
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to add course to associate: ${errorMessage}`)
+    }
   }
 }
 
@@ -751,10 +917,48 @@ const sendFeeEmail = async () => {
   background: white;
 }
 
-.form-select:focus {
+.form-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+}
+
+.form-select:focus,
+.form-input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.trimestral-payments {
+  margin-top: 1rem;
+}
+
+.trimestral-payments h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+.trimester-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.total-info {
+  text-align: right;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+  color: #333;
 }
 
 .selected-course-info {
