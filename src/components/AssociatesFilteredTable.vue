@@ -96,6 +96,7 @@
                 {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
+            <th>Payment Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -109,6 +110,10 @@
             <td>{{ associate.user.birthPlace }}</td>
             <td>{{ associate.user.fiscalCode }}</td>
             <td>{{ associate.associationYear }}</td>
+            <td class="payment-status">
+              <span v-if="isAssociateFullyPaid(associate)" class="payment-status-icon paid">✓</span>
+              <span v-else class="payment-status-icon unpaid">✗</span>
+            </td>
             <td class="actions-cell">
               <button
                 @click="manageAssociate(associate)"
@@ -264,6 +269,27 @@ const deleteAssociate = (associate) => {
   emit('delete-associate', associate)
 }
 
+// Function to check if an associate has all payments settled
+const isAssociateFullyPaid = (associate) => {
+  // Check if annual fee is paid
+  if (!associate.annualFeePaid) {
+    return false
+  }
+  
+  // Check if associate has courses
+  if (!associate.courses || associate.courses.length === 0) {
+    return true // If no courses, only annual fee matters
+  }
+  
+  // Check if every payment of every course has a paymentDate
+  return associate.courses.every(course => {
+    if (!course.payments || course.payments.length === 0) {
+      return false // Course has no payments
+    }
+    return course.payments.every(payment => payment.paymentDate)
+  })
+}
+
 const goToNextPage = () => {
   if (hasNextPage.value) {
     currentPage.value++
@@ -413,6 +439,33 @@ const goToPreviousPage = () => {
 
 .table-row:hover {
   background: #f8f9fa;
+}
+
+.payment-status {
+  text-align: center;
+}
+
+.payment-status-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+}
+
+.payment-status-icon.paid {
+  color: #28a745;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.payment-status-icon.unpaid {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
 }
 
 .actions-cell {
