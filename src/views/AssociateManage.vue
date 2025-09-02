@@ -525,10 +525,20 @@ const markFeePaid = async () => {
   const confirmed = confirm(`Are you sure you want to mark the fee as paid for ${associate.value.user.name}?`)
 
   if (confirmed) {
-    console.log('Mark fee as paid for associate:', associate.value)
-    // TODO: Implement mark fee as paid functionality
-    // Make API call to update annualFeePaid to true
-    // associate.value.annualFeePaid = true
+    try {
+      // Make API call to mark fee as paid
+      await associatesService.markFeePaid(associate.value.id)
+      
+      console.log('Fee marked as paid for associate:', associate.value)
+      
+      // Refresh associate data to show updated fee status
+      await fetchAssociate(associateId)
+      
+    } catch (err) {
+      console.error('Failed to mark fee as paid:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark fee as paid: ${errorMessage}`)
+    }
   }
 }
 

@@ -65,6 +65,21 @@ export const associatesService = {
       console.error('Error adding course to associate:', error)
       throw error
     }
+  },
+
+  /**
+   * Mark annual fee as paid for an associate
+   * @param {number} associateId - Associate ID
+   * @returns {Promise} API response
+   */
+  async markFeePaid(associateId) {
+    try {
+      const response = await api.put(`/associate/${associateId}/mark-fee-paid`)
+      return response.data
+    } catch (error) {
+      console.error('Error marking fee as paid:', error)
+      throw error
+    }
   }
 }
 
