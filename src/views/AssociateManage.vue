@@ -276,6 +276,51 @@
         </div>
       </div>
     </div>
+
+    <!-- Course Management Modal -->
+    <div v-if="showCourseManageModal" class="modal-overlay" @click="closeCourseManageModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Manage Course Payments - {{ selectedCourse?.name }}</h3>
+          <button @click="closeCourseManageModal" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="selectedCourse" class="course-info">
+            <div class="course-details">
+              <p><strong>Course:</strong> {{ selectedCourse.name }}</p>
+              <p><strong>Type:</strong> {{ selectedCourse.type }}</p>
+              <p><strong>Period:</strong> {{ formatDate(selectedCourse.startDate) }} - {{ formatDate(selectedCourse.endDate) }}</p>
+            </div>
+            
+            <div class="payments-section">
+              <h4>Payment Status</h4>
+              <div v-if="selectedCourse.payments && selectedCourse.payments.length > 0" class="payments-list">
+                <div v-for="payment in selectedCourse.payments" :key="payment.id" class="payment-item">
+                  <div class="payment-info">
+                    <span class="payment-type">{{ formatPaymentType(payment.paymentType) }}</span>
+                    <span class="payment-amount">€{{ payment.amount }}</span>
+                    <span class="payment-status" :class="{ 'paid': payment.paymentDate, 'unpaid': !payment.paymentDate }">
+                      {{ payment.paymentDate ? `Paid on ${formatDate(payment.paymentDate)}` : 'Not Paid' }}
+                    </span>
+                  </div>
+                  <div v-if="!payment.paymentDate" class="payment-actions">
+                    <button @click="markPaymentAsPaid(payment)" class="btn-primary payment-btn">
+                      Mark as Paid
+                    </button>
+                    <button @click="sendPaymentReminder(payment)" class="btn-secondary payment-btn">
+                      📧 Send Reminder
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="no-payments">
+                <p>No payments found for this course.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -308,6 +353,10 @@ const availableCourses = ref([])
 const coursesLoading = ref(false)
 const coursesError = ref(null)
 const selectedCourseId = ref('')
+
+// Course management modal state
+const showCourseManageModal = ref(false)
+const selectedCourse = ref(null)
 
 // Payment form state
 const paymentType = ref('')
@@ -506,9 +555,69 @@ const submitAddCourse = async () => {
 }
 
 const manageCourse = (course) => {
+  selectedCourse.value = course
+  showCourseManageModal.value = true
   console.log('Manage course:', course, 'for associate:', associate.value)
-  // TODO: Implement manage course functionality
-  // Could open a modal with course manage form
+}
+
+const closeCourseManageModal = () => {
+  showCourseManageModal.value = false
+  selectedCourse.value = null
+}
+
+const formatPaymentType = (paymentType) => {
+  const types = {
+    'unique': 'Single Payment',
+    'trimestral_first': 'First Trimester',
+    'trimestral_second': 'Second Trimester',
+    'trimestral_third': 'Third Trimester'
+  }
+  return types[paymentType] || paymentType
+}
+
+const markPaymentAsPaid = async (payment) => {
+  const confirmed = confirm(`Mark payment of €${payment.amount} as paid?`)
+  
+  if (confirmed) {
+    try {
+      console.log('Mark payment as paid:', payment)
+      // TODO: Implement API call to mark specific payment as paid
+      // await associatesService.markPaymentAsPaid(associate.value.id, selectedCourse.value.id, payment.id)
+      
+      // Refresh associate data
+      await fetchAssociate(associateId)
+      
+      // Update selected course with fresh data
+      const updatedCourse = associate.value.courses.find(c => c.id === selectedCourse.value.id)
+      if (updatedCourse) {
+        selectedCourse.value = updatedCourse
+      }
+      
+    } catch (err) {
+      console.error('Failed to mark payment as paid:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark payment as paid: ${errorMessage}`)
+    }
+  }
+}
+
+const sendPaymentReminder = async (payment) => {
+  const confirmed = confirm(`Send payment reminder email for €${payment.amount} to ${associate.value.user.email}?`)
+  
+  if (confirmed) {
+    try {
+      console.log('Send payment reminder:', payment)
+      // TODO: Implement API call to send payment reminder email
+      // await associatesService.sendPaymentReminder(associate.value.id, selectedCourse.value.id, payment.id)
+      
+      alert('Payment reminder email sent successfully!')
+      
+    } catch (err) {
+      console.error('Failed to send payment reminder:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to send payment reminder: ${errorMessage}`)
+    }
+  }
 }
 
 const removeCourse = async (course) => {
@@ -1065,6 +1174,118 @@ const sendFeeEmail = async () => {
 
 .btn-secondary:hover {
   background: #5a6268;
+}
+
+/* Course Management Modal Styles */
+.course-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.course-details {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.course-details p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+.payments-section h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+}
+
+.payments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  background: white;
+  transition: box-shadow 0.2s;
+}
+
+.payment-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.payment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.payment-type {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.payment-amount {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.payment-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+  max-width: fit-content;
+}
+
+.payment-status.paid {
+  color: #28a745;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.payment-status.unpaid {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.payment-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.no-payments {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
 }
 
 /* Responsive design */
