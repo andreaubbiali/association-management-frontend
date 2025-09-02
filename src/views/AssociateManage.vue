@@ -227,7 +227,6 @@
                     min="0"
                     class="form-input"
                     placeholder="First trimester amount"
-                    required
                   >
                 </div>
                 <div class="form-group">
@@ -240,7 +239,6 @@
                     min="0"
                     class="form-input"
                     placeholder="Second trimester amount"
-                    required
                   >
                 </div>
                 <div class="form-group">
@@ -253,7 +251,6 @@
                     min="0"
                     class="form-input"
                     placeholder="Third trimester amount"
-                    required
                   >
                 </div>
               </div>
@@ -373,12 +370,14 @@ const isFormValid = computed(() => {
   }
   
   if (paymentType.value === 'trimestral') {
-    return firstTrimesterPrice.value && 
-           secondTrimesterPrice.value && 
-           thirdTrimesterPrice.value &&
-           parseFloat(firstTrimesterPrice.value) > 0 &&
-           parseFloat(secondTrimesterPrice.value) > 0 &&
-           parseFloat(thirdTrimesterPrice.value) > 0
+    // At least 1 out of 3 trimesters must be specified
+    const validTrimesters = [
+      firstTrimesterPrice.value && parseFloat(firstTrimesterPrice.value) > 0,
+      secondTrimesterPrice.value && parseFloat(secondTrimesterPrice.value) > 0,
+      thirdTrimesterPrice.value && parseFloat(thirdTrimesterPrice.value) > 0
+    ].filter(Boolean)
+    
+    return validTrimesters.length >= 1
   }
   
   return false
@@ -442,20 +441,25 @@ const submitAddCourse = async () => {
         amount: parseFloat(uniquePrice.value)
       }]
     } else if (paymentType.value === 'trimestral') {
-      payments = [
-        {
+      // Only include trimesters with valid amounts
+      if (firstTrimesterPrice.value && parseFloat(firstTrimesterPrice.value) > 0) {
+        payments.push({
           paymentType: 'trimestral_first',
           amount: parseFloat(firstTrimesterPrice.value)
-        },
-        {
+        })
+      }
+      if (secondTrimesterPrice.value && parseFloat(secondTrimesterPrice.value) > 0) {
+        payments.push({
           paymentType: 'trimestral_second',
           amount: parseFloat(secondTrimesterPrice.value)
-        },
-        {
+        })
+      }
+      if (thirdTrimesterPrice.value && parseFloat(thirdTrimesterPrice.value) > 0) {
+        payments.push({
           paymentType: 'trimestral_third',
           amount: parseFloat(thirdTrimesterPrice.value)
-        }
-      ]
+        })
+      }
     }
     
     const courseData = {
