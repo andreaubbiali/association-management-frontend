@@ -105,7 +105,7 @@
                 <th>Type</th>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Price</th>
+                <th>Payment Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -115,7 +115,10 @@
                 <td>{{ course.type }}</td>
                 <td>{{ formatDate(course.startDate) }}</td>
                 <td>{{ formatDate(course.endDate) }}</td>
-                <td>€{{ course.price }}</td>
+                <td class="payment-status">
+                  <span v-if="isCoursePaid(course)" class="payment-status-icon paid">✓</span>
+                  <span v-else class="payment-status-icon unpaid">✗</span>
+                </td>
                 <td class="course-actions">
                   <button @click="manageCourse(course)" class="course-action-btn manage-course-btn">
                     Manage
@@ -382,6 +385,16 @@ const isFormValid = computed(() => {
   
   return false
 })
+
+// Function to check if all payments for a course are settled
+const isCoursePaid = (course) => {
+  if (!course.payments || course.payments.length === 0) {
+    return false
+  }
+  
+  // Check if every payment has a paymentDate
+  return course.payments.every(payment => payment.paymentDate)
+}
 
 const addCourse = async () => {
   showAddCourseModal.value = true
@@ -783,6 +796,33 @@ const sendFeeEmail = async () => {
   background: #f8f9fa;
   font-weight: 600;
   color: #333;
+}
+
+.payment-status {
+  text-align: center;
+}
+
+.payment-status-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 50%;
+}
+
+.payment-status-icon.paid {
+  color: #28a745;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.payment-status-icon.unpaid {
+  color: #dc3545;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
 }
 
 .course-row:hover {
