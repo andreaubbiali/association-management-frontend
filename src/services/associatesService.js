@@ -92,6 +92,7 @@ export const associatesService = {
    * @param {string} paymentData.coursePayment.receiptType - Receipt type (SPORT_RECEIPT, DIDACTIC_RECEIPT)
    * @param {string} paymentData.coursePayment.paymentMethod - Payment method (CASH, CREDIT_CARD, BANK_TRANSFER)
    * @param {string} paymentData.coursePayment.causal - Payment causal
+   * @param {boolean} paymentData.coursePayment.sendEmail - Whether to send confirmation email
    * @returns {Promise} API response
    */
   async markPaymentAsPaid(associateId, courseId, paymentData) {

@@ -381,6 +381,18 @@
                 >
               </div>
 
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="paymentDetails.sendEmail"
+                    :disabled="markingPayment"
+                    class="form-checkbox"
+                  >
+                  Send confirmation email to associate
+                </label>
+              </div>
+
               <div class="form-actions">
                 <button type="button" @click="closePaymentDetailsModal" class="btn-secondary" :disabled="markingPayment">
                   Cancel
@@ -439,7 +451,8 @@ const markingPayment = ref(false)
 const paymentDetails = ref({
   receiptType: '',
   paymentMethod: '',
-  causal: ''
+  causal: '',
+  sendEmail: true
 })
 
 // Payment form state
@@ -678,7 +691,8 @@ const closePaymentDetailsModal = () => {
   paymentDetails.value = {
     receiptType: '',
     paymentMethod: '',
-    causal: ''
+    causal: '',
+    sendEmail: true
   }
 }
 
@@ -695,7 +709,8 @@ const confirmMarkPaymentAsPaid = async () => {
         paymentId: selectedPayment.value.id,
         receiptType: paymentDetails.value.receiptType,
         paymentMethod: paymentDetails.value.paymentMethod,
-        causal: paymentDetails.value.causal
+        causal: paymentDetails.value.causal,
+        sendEmail: paymentDetails.value.sendEmail
       }
     }
 
@@ -1221,6 +1236,26 @@ const sendFeeEmail = async () => {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-checkbox {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.form-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .trimestral-payments {
