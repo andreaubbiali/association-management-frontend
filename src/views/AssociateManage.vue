@@ -407,6 +407,48 @@
         </div>
       </div>
     </div>
+
+    <!-- Fee Payment Modal -->
+    <div v-if="showFeePaymentModal" class="modal-overlay" @click="closeFeePaymentModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Mark Annual Fee as Paid</h3>
+          <button @click="closeFeePaymentModal" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="fee-payment-form">
+            <div class="fee-summary">
+              <p><strong>Associate:</strong> {{ associate?.user?.name }}</p>
+              <p><strong>Email:</strong> {{ associate?.user?.email }}</p>
+            </div>
+            
+            <form @submit.prevent="confirmMarkFeePaid">
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="feeEmailPreference"
+                    :disabled="markingFee"
+                    class="form-checkbox"
+                  >
+                  Send confirmation email to associate
+                </label>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" @click="closeFeePaymentModal" class="btn-secondary" :disabled="markingFee">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-primary" :disabled="markingFee">
+                  <span v-if="markingFee" class="loading-spinner"></span>
+                  {{ markingFee ? 'Processing...' : 'Mark as Paid' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -454,6 +496,11 @@ const paymentDetails = ref({
   causal: '',
   sendEmail: true
 })
+
+// Fee payment modal state
+const showFeePaymentModal = ref(false)
+const feeEmailPreference = ref(true)
+const markingFee = ref(false)
 
 // Payment form state
 const paymentType = ref('')
@@ -770,24 +817,41 @@ const removeCourse = async (course) => {
   }
 }
 
-const markFeePaid = async () => {
-  const confirmed = confirm(`Are you sure you want to mark the fee as paid for ${associate.value.user.name}?`)
+const markFeePaid = () => {
+  showFeePaymentModal.value = true
+}
 
-  if (confirmed) {
-    try {
-      // Make API call to mark fee as paid
-      await associatesService.markFeePaid(associate.value.id)
-      
-      console.log('Fee marked as paid for associate:', associate.value)
-      
-      // Refresh associate data to show updated fee status
-      await fetchAssociate(associateId)
-      
-    } catch (err) {
-      console.error('Failed to mark fee as paid:', err)
-      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
-      alert(`Failed to mark fee as paid: ${errorMessage}`)
-    }
+const closeFeePaymentModal = () => {
+  showFeePaymentModal.value = false
+  feeEmailPreference.value = true
+  markingFee.value = false
+}
+
+const confirmMarkFeePaid = async () => {
+  if (markingFee.value) return
+  
+  markingFee.value = true
+  
+  try {
+    // Make API call to mark fee as paid with email preference
+    await associatesService.markFeePaid(associate.value.id, feeEmailPreference.value)
+    
+    console.log('Fee marked as paid for associate:', associate.value)
+    
+    // Refresh associate data to show updated fee status
+    await fetchAssociate(associateId)
+    
+    // Close modal
+    closeFeePaymentModal()
+    
+    alert('Fee marked as paid successfully!')
+    
+  } catch (err) {
+    console.error('Failed to mark fee as paid:', err)
+    const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+    alert(`Failed to mark fee as paid: ${errorMessage}`)
+  } finally {
+    markingFee.value = false
   }
 }
 
@@ -1463,6 +1527,25 @@ const sendFeeEmail = async () => {
 }
 
 .payment-summary p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+/* Fee Payment Modal Styles */
+.fee-payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fee-summary {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.fee-summary p {
   margin: 0.5rem 0;
   color: #333;
 }

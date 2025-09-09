@@ -70,11 +70,12 @@ export const associatesService = {
   /**
    * Mark annual fee as paid for an associate
    * @param {number} associateId - Associate ID
+   * @param {boolean} sendEmail - Whether to send confirmation email (default: true)
    * @returns {Promise} API response
    */
-  async markFeePaid(associateId) {
+  async markFeePaid(associateId, sendEmail) {
     try {
-      const response = await api.put(`/associate/${associateId}/mark-fee-paid`)
+      const response = await api.put(`/associate/${associateId}/mark-fee-paid?sendEmail=${sendEmail}`)
       return response.data
     } catch (error) {
       console.error('Error marking fee as paid:', error)
