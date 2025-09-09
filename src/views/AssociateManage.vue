@@ -321,6 +321,80 @@
         </div>
       </div>
     </div>
+
+    <!-- Payment Details Modal -->
+    <div v-if="showPaymentDetailsModal" class="modal-overlay" @click="closePaymentDetailsModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Mark Payment as Paid</h3>
+          <button @click="closePaymentDetailsModal" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="selectedPayment" class="payment-details-form">
+            <div class="payment-summary">
+              <p><strong>Payment:</strong> {{ formatPaymentType(selectedPayment.paymentType) }}</p>
+              <p><strong>Amount:</strong> €{{ selectedPayment.amount }}</p>
+            </div>
+            
+            <form @submit.prevent="confirmMarkPaymentAsPaid">
+              <div class="form-group">
+                <label for="receiptType">Receipt Type:</label>
+                <select 
+                  id="receiptType" 
+                  v-model="paymentDetails.receiptType" 
+                  class="form-select"
+                  :disabled="markingPayment"
+                  required
+                >
+                  <option value="">Select receipt type...</option>
+                  <option value="sport_receipt">Sport Receipt</option>
+                  <option value="didactic_receipt">Didactic Receipt</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="paymentMethod">Payment Method:</label>
+                <select 
+                  id="paymentMethod" 
+                  v-model="paymentDetails.paymentMethod" 
+                  class="form-select"
+                  :disabled="markingPayment"
+                  required
+                >
+                  <option value="">Select payment method...</option>
+                  <option value="cash">Cash</option>
+                  <option value="credit_card">Credit Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="causal">Causal:</label>
+                <input 
+                  id="causal"
+                  v-model="paymentDetails.causal" 
+                  type="text" 
+                  class="form-input"
+                  :disabled="markingPayment"
+                  placeholder="Enter payment causal"
+                  required
+                >
+              </div>
+
+              <div class="form-actions">
+                <button type="button" @click="closePaymentDetailsModal" class="btn-secondary" :disabled="markingPayment">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-primary" :disabled="!isPaymentDetailsValid || markingPayment">
+                  <span v-if="markingPayment" class="loading-spinner"></span>
+                  {{ markingPayment ? 'Processing...' : 'Mark as Paid' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -357,6 +431,16 @@ const selectedCourseId = ref('')
 // Course management modal state
 const showCourseManageModal = ref(false)
 const selectedCourse = ref(null)
+
+// Payment details modal state
+const showPaymentDetailsModal = ref(false)
+const selectedPayment = ref(null)
+const markingPayment = ref(false)
+const paymentDetails = ref({
+  receiptType: '',
+  paymentMethod: '',
+  causal: ''
+})
 
 // Payment form state
 const paymentType = ref('')
@@ -444,6 +528,13 @@ const isCoursePaid = (course) => {
   // Check if every payment has a paymentDate
   return course.payments.every(payment => payment.paymentDate)
 }
+
+// Validation for payment details form
+const isPaymentDetailsValid = computed(() => {
+  return paymentDetails.value.receiptType && 
+         paymentDetails.value.paymentMethod && 
+         paymentDetails.value.causal.trim()
+})
 
 const addCourse = async () => {
   showAddCourseModal.value = true
@@ -575,29 +666,63 @@ const formatPaymentType = (paymentType) => {
   return types[paymentType] || paymentType
 }
 
-const markPaymentAsPaid = async (payment) => {
-  const confirmed = confirm(`Mark payment of €${payment.amount} as paid?`)
-  
-  if (confirmed) {
-    try {
-      console.log('Mark payment as paid:', payment)
-      // TODO: Implement API call to mark specific payment as paid
-      // await associatesService.markPaymentAsPaid(associate.value.id, selectedCourse.value.id, payment.id)
-      
-      // Refresh associate data
-      await fetchAssociate(associateId)
-      
-      // Update selected course with fresh data
-      const updatedCourse = associate.value.courses.find(c => c.id === selectedCourse.value.id)
-      if (updatedCourse) {
-        selectedCourse.value = updatedCourse
+const markPaymentAsPaid = (payment) => {
+  selectedPayment.value = payment
+  showPaymentDetailsModal.value = true
+}
+
+const closePaymentDetailsModal = () => {
+  showPaymentDetailsModal.value = false
+  selectedPayment.value = null
+  markingPayment.value = false
+  paymentDetails.value = {
+    receiptType: '',
+    paymentMethod: '',
+    causal: ''
+  }
+}
+
+const confirmMarkPaymentAsPaid = async () => {
+  if (!selectedPayment.value || !isPaymentDetailsValid.value || markingPayment.value) {
+    return
+  }
+
+  markingPayment.value = true
+
+  try {
+    const paymentData = {
+      coursePayment: {
+        paymentId: selectedPayment.value.id,
+        receiptType: paymentDetails.value.receiptType,
+        paymentMethod: paymentDetails.value.paymentMethod,
+        causal: paymentDetails.value.causal
       }
-      
-    } catch (err) {
-      console.error('Failed to mark payment as paid:', err)
-      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
-      alert(`Failed to mark payment as paid: ${errorMessage}`)
     }
+
+    console.log('Mark payment as paid:', paymentData)
+    // Make API call to mark specific payment as paid
+    await associatesService.markPaymentAsPaid(associate.value.id, selectedCourse.value.id, paymentData)
+    
+    // Refresh associate data
+    await fetchAssociate(associateId)
+    
+    // Update selected course with fresh data
+    const updatedCourse = associate.value.courses.find(c => c.id === selectedCourse.value.id)
+    if (updatedCourse) {
+      selectedCourse.value = updatedCourse
+    }
+    
+    // Close both modals
+    closePaymentDetailsModal()
+    
+    alert('Payment marked as paid successfully!')
+    
+  } catch (err) {
+    console.error('Failed to mark payment as paid:', err)
+    const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+    alert(`Failed to mark payment as paid: ${errorMessage}`)
+  } finally {
+    markingPayment.value = false
   }
 }
 
@@ -1286,6 +1411,43 @@ const sendFeeEmail = async () => {
   background: #f8f9fa;
   border-radius: 6px;
   border: 1px solid #e9ecef;
+}
+
+/* Payment Details Modal Styles */
+.payment-details-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payment-summary {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.payment-summary p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive design */

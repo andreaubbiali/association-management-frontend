@@ -80,6 +80,28 @@ export const associatesService = {
       console.error('Error marking fee as paid:', error)
       throw error
     }
+  },
+
+  /**
+   * Mark a course payment as paid
+   * @param {number} associateId - Associate ID
+   * @param {number} courseId - Course ID
+   * @param {Object} paymentData - Payment details wrapper
+   * @param {Object} paymentData.coursePayment - Payment details object
+   * @param {number} paymentData.coursePayment.paymentId - Payment ID
+   * @param {string} paymentData.coursePayment.receiptType - Receipt type (SPORT_RECEIPT, DIDACTIC_RECEIPT)
+   * @param {string} paymentData.coursePayment.paymentMethod - Payment method (CASH, CREDIT_CARD, BANK_TRANSFER)
+   * @param {string} paymentData.coursePayment.causal - Payment causal
+   * @returns {Promise} API response
+   */
+  async markPaymentAsPaid(associateId, courseId, paymentData) {
+    try {
+      const response = await api.put(`/associate/${associateId}/course/${courseId}/payment`, paymentData)
+      return response.data
+    } catch (error) {
+      console.error('Error marking payment as paid:', error)
+      throw error
+    }
   }
 }
 
