@@ -10,7 +10,7 @@ export const associatesService = {
    * @param {string} filters.name - Filter by name
    * @param {string} filters.lastName - Filter by last name
    * @param {string} filters.email - Filter by email
-   * @param {number} filters.associationYear - Filter by association year
+   * @param {number} filters.validityYear - Filter by validity year
    * @param {number} filters.page - Page number for pagination
    * @param {number} filters.limit - Items per page
    * @returns {Promise} API response

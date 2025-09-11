@@ -71,16 +71,16 @@
             <span>{{ formatDate(associate.user.birthDate) }}</span>
           </div>
           <div class="info-item">
-            <label>Birth Place:</label>
-            <span>{{ associate.user.birthPlace }}</span>
+            <label>Birth City:</label>
+            <span>{{ associate.user.birthCity }}</span>
           </div>
           <div class="info-item">
             <label>Fiscal Code:</label>
             <span>{{ associate.user.fiscalCode }}</span>
           </div>
           <div class="info-item">
-            <label>Association Year:</label>
-            <span>{{ associate.associationYear }}</span>
+            <label>Validity Year:</label>
+            <span>{{ associate.validityYear }}</span>
           </div>
         </div>
       </div>

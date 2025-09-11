@@ -91,7 +91,7 @@
             <th>Birth Place</th>
             <th>Fiscal Code</th>
             <th @click="sortBy('validityYear')" class="sortable">
-              Association Year
+              Validity Year
               <span class="sort-indicator" v-if="sortField === 'validityYear'">
                 {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
@@ -107,7 +107,7 @@
             <td>{{ associate.user.lastName }}</td>
             <td>{{ associate.user.email }}</td>
             <td>{{ formatDate(associate.user.birthDate) }}</td>
-            <td>{{ associate.user.birthPlace }}</td>
+            <td>{{ associate.user.birthCity }}</td>
             <td>{{ associate.user.fiscalCode }}</td>
             <td>{{ associate.validityYear }}</td>
             <td class="payment-status">
