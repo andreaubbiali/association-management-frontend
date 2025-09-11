@@ -36,7 +36,7 @@
         </div>
         <div class="filter-group">
           <label for="yearFilter">Year:</label>
-          <select id="yearFilter" v-model="filters.associationYear" class="filter-select">
+          <select id="yearFilter" v-model="filters.validityYear" class="filter-select">
             <option value="">All Years</option>
             <option v-for="year in availableYears" :key="year" :value="year">
               {{ year }}
@@ -90,9 +90,9 @@
             </th>
             <th>Birth Place</th>
             <th>Fiscal Code</th>
-            <th @click="sortBy('associationYear')" class="sortable">
+            <th @click="sortBy('validityYear')" class="sortable">
               Association Year
-              <span class="sort-indicator" v-if="sortField === 'associationYear'">
+              <span class="sort-indicator" v-if="sortField === 'validityYear'">
                 {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
@@ -109,7 +109,7 @@
             <td>{{ formatDate(associate.user.birthDate) }}</td>
             <td>{{ associate.user.birthPlace }}</td>
             <td>{{ associate.user.fiscalCode }}</td>
-            <td>{{ associate.associationYear }}</td>
+            <td>{{ associate.validityYear }}</td>
             <td class="payment-status">
               <span v-if="isAssociateFullyPaid(associate)" class="payment-status-icon paid">✓</span>
               <span v-else class="payment-status-icon unpaid">✗</span>
@@ -189,7 +189,7 @@ const filters = ref({
   name: '',
   lastName: '',
   email: '',
-  associationYear: ''
+  validityYear: ''
 })
 
 const sortField = ref('')
@@ -203,8 +203,7 @@ watch(() => props.currentPage, (newPage) => {
 
 // Computed properties
 const availableYears = computed(() => {
-  const years = [...new Set(props.associates.map(associate => associate.associationYear))]
-  return years.sort((a, b) => b - a)
+  return ["2025/2026", "2026/2027"]
 })
 
 const totalPages = computed(() => {
@@ -245,7 +244,7 @@ const clearFilters = () => {
     name: '',
     lastName: '',
     email: '',
-    associationYear: ''
+    validityYear: ''
   }
   currentPage.value = 1
   // Trigger API call to fetch all data without filters
