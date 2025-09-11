@@ -94,8 +94,7 @@ const showPassword = ref(false)
 // Computed properties
 const isFormValid = computed(() => {
   return loginForm.value.username && 
-         loginForm.value.password && 
-         loginForm.value.username.includes('@') &&
+         loginForm.value.password &&
          loginForm.value.password.length >= 6
 })
 
@@ -106,8 +105,6 @@ const validateForm = () => {
   // Username validation
   if (!loginForm.value.username) {
     errors.value.username = 'Username is required'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginForm.value.username)) {
-    errors.value.username = 'Please enter a valid username'
   }
   
   // Password validation
