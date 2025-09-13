@@ -14,6 +14,6 @@ npm run dev
 ## docker publish
 
 ```
-docker build -t ghcr.io/andreaubbiali/association-fe:latest .
+docker build --platform linux/amd64 -t ghcr.io/andreaubbiali/association-fe:latest .
 docker push ghcr.io/andreaubbiali/association-fe:latest
 ```
