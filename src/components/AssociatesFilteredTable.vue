@@ -5,6 +5,16 @@
       <h3>Filter Associates</h3>
       <div class="filter-row">
         <div class="filter-group">
+          <label for="nameFilter">Bloom id:</label>
+          <input
+            id="nameFilter"
+            v-model="filters.bloomId"
+            type="text"
+            placeholder="Search by Bloom id..."
+            class="filter-input"
+          />
+        </div>
+        <div class="filter-group">
           <label for="nameFilter">Name:</label>
           <input
             id="nameFilter"
@@ -35,7 +45,7 @@
           />
         </div>
         <div class="filter-group">
-          <label for="yearFilter">Year:</label>
+          <label for="yearFilter">Validity year:</label>
           <select id="yearFilter" v-model="filters.validityYear" class="filter-select">
             <option value="">All Years</option>
             <option v-for="year in availableYears" :key="year" :value="year">
@@ -184,6 +194,7 @@ const emit = defineEmits(['manage-associate', 'delete-associate', 'apply-filters
 
 // Reactive data
 const filters = ref({
+  bloomId: '',
   name: '',
   lastName: '',
   email: '',
@@ -239,6 +250,7 @@ const sortBy = (field) => {
 
 const clearFilters = () => {
   filters.value = {
+    bloomId: '',
     name: '',
     lastName: '',
     email: '',

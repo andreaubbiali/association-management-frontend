@@ -7,6 +7,7 @@ export const associatesService = {
   /**
    * Get all associates with optional filters
    * @param {Object} filters - Filter parameters
+   * @param {string} filters.bloomId - Filter by Bloom id
    * @param {string} filters.name - Filter by name
    * @param {string} filters.lastName - Filter by last name
    * @param {string} filters.email - Filter by email
