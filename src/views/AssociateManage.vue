@@ -201,7 +201,7 @@
                   <button @click="manageCourse(course)" class="course-action-btn manage-course-btn">
                     Manage
                   </button>
-                  <button @click="removeCourse(course)" disabled class="course-action-btn remove-course-btn">
+                  <button @click="removeCourse(course)" class="course-action-btn remove-course-btn">
                     Remove
                   </button>
                 </td>
@@ -867,7 +867,7 @@ const confirmMarkPaymentAsPaid = async () => {
 }
 
 const sendPaymentReminder = async (payment) => {
-  const confirmed = confirm(`Send payment reminder email for €${payment.amount} to ${associate.value.user.email}?`)
+  const confirmed = confirm(`Send payment reminder email for €${payment.amount} to ${associate.value.user.email}? actually not implemented - ask to ANDREA UBBIALI`)
   
   if (confirmed) {
     try {
@@ -875,7 +875,7 @@ const sendPaymentReminder = async (payment) => {
       // TODO: Implement API call to send payment reminder email
       // await associatesService.sendPaymentReminder(associate.value.id, selectedCourse.value.id, payment.id)
       
-      alert('Payment reminder email sent successfully!')
+    //   alert('Payment reminder email sent successfully!')
       
     } catch (err) {
       console.error('Failed to send payment reminder:', err)
@@ -886,7 +886,7 @@ const sendPaymentReminder = async (payment) => {
 }
 
 const removeCourse = async (course) => {
-  const confirmed = confirm(`Are you sure you want to remove ${course.name} from this associate?`)
+  const confirmed = confirm(`Are you sure you want to remove ${course.name} from this associate? actually not implemented - ask to ANDREA UBBIALI`)
   
   if (confirmed) {
     console.log('Remove course:', course, 'from associate:', associate.value)
@@ -934,10 +934,10 @@ const confirmMarkFeePaid = async () => {
 }
 
 const sendFeeEmail = async () => {
-  const confirmed = confirm(`Send annual fee reminder email to ${associate.value.user.email}?`)
+  const confirmed = confirm(`Send annual fee reminder email to ${associate.value.user.email}? actually not implemented - ask to ANDREA UBBIALI`)
 
   if (confirmed) {
-    console.log('Send fee email for associate:', associate.value)
+    console.log(`Send fee email for associate: ${associate.value} actually not implemented - ask to ANDREA UBBIALI`)
     // TODO: Implement send email functionality
     // Make API call to send reminder email for annual fee payment
   }
