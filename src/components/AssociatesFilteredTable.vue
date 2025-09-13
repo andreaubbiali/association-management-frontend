@@ -59,7 +59,7 @@
         <thead>
           <tr>
             <th @click="sortBy('id')" class="sortable">
-              ID 
+              Bloom_id 
               <span class="sort-indicator" v-if="sortField === 'id'">
                 {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
@@ -88,7 +88,6 @@
                 {{ sortDirection === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th>Birth Place</th>
             <th>Fiscal Code</th>
             <th @click="sortBy('validityYear')" class="sortable">
               Validity Year
@@ -102,12 +101,11 @@
         </thead>
         <tbody>
           <tr v-for="associate in associates" :key="associate.id" class="table-row">
-            <td>{{ associate.id }}</td>
+            <td>{{ associate.user.bloomId }}</td>
             <td>{{ associate.user.name }}</td>
             <td>{{ associate.user.lastName }}</td>
             <td>{{ associate.user.email }}</td>
             <td>{{ formatDate(associate.user.birthDate) }}</td>
-            <td>{{ associate.user.birthCity }}</td>
             <td>{{ associate.user.fiscalCode }}</td>
             <td>{{ associate.validityYearStart }}/{{ associate.validityYearEnd }}</td>
             <td class="payment-status">

@@ -51,8 +51,94 @@
             </div>
           </div>
           <div class="info-item">
+            <label>Privacy Module Delivered:</label>
+            <div class="fee-status-container">
+              <span class="fee-status" :class="{ 'paid': associate.privacyModuleDelivered, 'unpaid': !associate.privacyModuleDelivered }">
+                {{ associate.privacyModuleDelivered ? '✓' : '✗' }}
+              </span>
+              <button 
+                @click="markPrivacyModuleDelivered" 
+                :disabled="associate.privacyModuleDelivered" 
+                class="fee-action-btn"
+                :class="{ 'disabled': associate.privacyModuleDelivered }"
+                :title="associate.privacyModuleDelivered ? 'Already delivered' : 'Mark as delivered'"
+              >
+                Set Delivered
+              </button>
+            </div>
+          </div>
+          <div class="info-item">
+            <label>Photo/Video Authorized:</label>
+            <div class="fee-status-container">
+              <span class="fee-status" :class="{ 'paid': associate.photoVideoAuthorized, 'unpaid': !associate.photoVideoAuthorized }">
+                {{ associate.photoVideoAuthorized ? '✓' : '✗' }}
+              </span>
+              <button 
+                @click="markPhotoVideoAuthorized" 
+                :disabled="associate.photoVideoAuthorized" 
+                class="fee-action-btn"
+                :class="{ 'disabled': associate.photoVideoAuthorized }"
+                :title="associate.photoVideoAuthorized ? 'Already authorized' : 'Mark as authorized'"
+              >
+                Set Delivered
+              </button>
+            </div>
+          </div>
+          <div class="info-item">
+            <label>Medical Certificate Delivered:</label>
+            <div class="fee-status-container">
+              <span class="fee-status" :class="{ 'paid': associate.medicalCertificateDelivered, 'unpaid': !associate.medicalCertificateDelivered }">
+                {{ associate.medicalCertificateDelivered ? '✓' : '✗' }}
+              </span>
+              <button 
+                @click="markMedicalCertificateDelivered" 
+                :disabled="associate.medicalCertificateDelivered" 
+                class="fee-action-btn"
+                :class="{ 'disabled': associate.medicalCertificateDelivered }"
+                :title="associate.medicalCertificateDelivered ? 'Already delivered' : 'Mark as delivered'"
+              >
+                Set Delivered
+              </button>
+            </div>
+          </div>
+          <div class="info-item">
+            <label>Sport Material Module Delivered:</label>
+            <div class="fee-status-container">
+              <span class="fee-status" :class="{ 'paid': associate.sportMaterialModuleDelivered, 'unpaid': !associate.sportMaterialModuleDelivered }">
+                {{ associate.sportMaterialModuleDelivered ? '✓' : '✗' }}
+              </span>
+              <button 
+                @click="markSportMaterialModuleDelivered" 
+                :disabled="associate.sportMaterialModuleDelivered" 
+                class="fee-action-btn"
+                :class="{ 'disabled': associate.sportMaterialModuleDelivered }"
+                :title="associate.sportMaterialModuleDelivered ? 'Already delivered' : 'Mark as delivered'"
+              >
+                Set Delivered
+              </button>
+            </div>
+          </div>
+          <div class="info-item">
             <label>ID:</label>
-            <span>{{ associate.id }}</span>
+            <span>{{ associate.user.bloomId }}</span>
+          </div>
+          <div class="info-item">
+            <label>Validity Year:</label>
+            <span>{{ associate.validityYearStart }}/{{ associate.validityYearEnd }}</span>
+          </div>
+          <div class="info-item">
+            <label>Discount:</label>
+              <span :class="{'discount-true': !!associate.discount}">
+                {{ !!associate.discount }}
+              </span>
+          </div>
+          <div class="info-item">
+            <label>Email:</label>
+            <span>{{ associate.user.email }}</span>
+          </div>
+          <div class="info-item">
+            <label>Phone number:</label>
+            <span>{{ associate.user.phoneNumber }}</span>
           </div>
           <div class="info-item">
             <label>Name:</label>
@@ -63,8 +149,8 @@
             <span>{{ associate.user.lastName }}</span>
           </div>
           <div class="info-item">
-            <label>Email:</label>
-            <span>{{ associate.user.email }}</span>
+            <label>Fiscal Code:</label>
+            <span>{{ associate.user.fiscalCode }}</span>
           </div>
           <div class="info-item">
             <label>Birth Date:</label>
@@ -73,14 +159,6 @@
           <div class="info-item">
             <label>Birth City:</label>
             <span>{{ associate.user.birthCity }}</span>
-          </div>
-          <div class="info-item">
-            <label>Fiscal Code:</label>
-            <span>{{ associate.user.fiscalCode }}</span>
-          </div>
-          <div class="info-item">
-            <label>Validity Year:</label>
-            <span>{{ associate.validityYearStart }}/{{ associate.validityYearEnd }}</span>
           </div>
         </div>
       </div>
@@ -864,6 +942,94 @@ const sendFeeEmail = async () => {
     // Make API call to send reminder email for annual fee payment
   }
 }
+
+const markPrivacyModuleDelivered = async () => {
+  const confirmed = confirm(`Mark privacy module as delivered for ${associate.value.user.name} ${associate.value.user.lastName}?`)
+  
+  if (confirmed) {
+    try {
+      // TODO: Implement API call to mark privacy module as delivered
+      // await associatesService.markPrivacyModuleDelivered(associate.value.id)
+      
+      // For now, update locally until API is implemented
+      associate.value.privacyModuleDelivered = true
+      
+      console.log('Privacy module marked as delivered for associate:', associate.value)
+      alert('Privacy module marked as delivered successfully!')
+      
+    } catch (err) {
+      console.error('Failed to mark privacy module as delivered:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark privacy module as delivered: ${errorMessage}`)
+    }
+  }
+}
+
+const markPhotoVideoAuthorized = async () => {
+  const confirmed = confirm(`Mark photo/video authorization as delivered for ${associate.value.user.name} ${associate.value.user.lastName}?`)
+  
+  if (confirmed) {
+    try {
+      // TODO: Implement API call to mark photo/video authorization as delivered
+      // await associatesService.markPhotoVideoAuthorized(associate.value.id)
+      
+      // For now, update locally until API is implemented
+      associate.value.photoVideoAuthorized = true
+      
+      console.log('Photo/video authorization marked as delivered for associate:', associate.value)
+      alert('Photo/video authorization marked as delivered successfully!')
+      
+    } catch (err) {
+      console.error('Failed to mark photo/video authorization as delivered:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark photo/video authorization as delivered: ${errorMessage}`)
+    }
+  }
+}
+
+const markMedicalCertificateDelivered = async () => {
+  const confirmed = confirm(`Mark medical certificate as delivered for ${associate.value.user.name} ${associate.value.user.lastName}?`)
+  
+  if (confirmed) {
+    try {
+      // TODO: Implement API call to mark medical certificate as delivered
+      // await associatesService.markMedicalCertificateDelivered(associate.value.id)
+      
+      // For now, update locally until API is implemented
+      associate.value.medicalCertificateDelivered = true
+      
+      console.log('Medical certificate marked as delivered for associate:', associate.value)
+      alert('Medical certificate marked as delivered successfully!')
+      
+    } catch (err) {
+      console.error('Failed to mark medical certificate as delivered:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark medical certificate as delivered: ${errorMessage}`)
+    }
+  }
+}
+
+const markSportMaterialModuleDelivered = async () => {
+  const confirmed = confirm(`Mark sport material module as delivered for ${associate.value.user.name} ${associate.value.user.lastName}?`)
+  
+  if (confirmed) {
+    try {
+      // TODO: Implement API call to mark sport material module as delivered
+      // await associatesService.markSportMaterialModuleDelivered(associate.value.id)
+      
+      // For now, update locally until API is implemented
+      associate.value.sportMaterialModuleDelivered = true
+      
+      console.log('Sport material module marked as delivered for associate:', associate.value)
+      alert('Sport material module marked as delivered successfully!')
+      
+    } catch (err) {
+      console.error('Failed to mark sport material module as delivered:', err)
+      const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+      alert(`Failed to mark sport material module as delivered: ${errorMessage}`)
+    }
+  }
+}
 </script>
 
 <style scoped>
@@ -871,6 +1037,10 @@ const sendFeeEmail = async () => {
   padding: 1rem;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.discount-true {
+  border: 2px solid #28a745 !important;
 }
 
 .page-header {
