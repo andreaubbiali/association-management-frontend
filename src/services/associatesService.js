@@ -105,6 +105,26 @@ export const associatesService = {
       console.error('Error marking payment as paid:', error)
       throw error
     }
+  },
+
+  /**
+   * Update delivery status fields for an associate
+   * @param {number} associateId - Associate ID
+   * @param {Object} deliveryData - Delivery status data
+   * @param {boolean} deliveryData.privacyModuleDelivered - Privacy module delivery status
+   * @param {boolean} deliveryData.photoVideoAuthorized - Photo/video authorization status
+   * @param {boolean} deliveryData.medicalCertificateDelivered - Medical certificate delivery status
+   * @param {boolean} deliveryData.sportMaterialModuleDelivered - Sport material module delivery status
+   * @returns {Promise} API response
+   */
+  async updateDeliveryStatus(associateId, deliveryData) {
+    try {
+      const response = await api.put(`/associate/${associateId}`, deliveryData)
+      return response.data
+    } catch (error) {
+      console.error('Error updating delivery status:', error)
+      throw error
+    }
   }
 }
 

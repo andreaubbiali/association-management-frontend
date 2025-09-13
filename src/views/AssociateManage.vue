@@ -948,10 +948,17 @@ const markPrivacyModuleDelivered = async () => {
   
   if (confirmed) {
     try {
-      // TODO: Implement API call to mark privacy module as delivered
-      // await associatesService.markPrivacyModuleDelivered(associate.value.id)
+      // Prepare the data with all current values and update the specific field
+      const deliveryData = {
+        privacyModuleDelivered: true,
+        photoVideoAuthorized: associate.value.photoVideoAuthorized || false,
+        medicalCertificateDelivered: associate.value.medicalCertificateDelivered || false,
+        sportMaterialModuleDelivered: associate.value.sportMaterialModuleDelivered || false
+      }
       
-      // For now, update locally until API is implemented
+      await associatesService.updateDeliveryStatus(associate.value.id, deliveryData)
+      
+      // Update local state
       associate.value.privacyModuleDelivered = true
       
       console.log('Privacy module marked as delivered for associate:', associate.value)
@@ -970,10 +977,17 @@ const markPhotoVideoAuthorized = async () => {
   
   if (confirmed) {
     try {
-      // TODO: Implement API call to mark photo/video authorization as delivered
-      // await associatesService.markPhotoVideoAuthorized(associate.value.id)
+      // Prepare the data with all current values and update the specific field
+      const deliveryData = {
+        privacyModuleDelivered: associate.value.privacyModuleDelivered || false,
+        photoVideoAuthorized: true,
+        medicalCertificateDelivered: associate.value.medicalCertificateDelivered || false,
+        sportMaterialModuleDelivered: associate.value.sportMaterialModuleDelivered || false
+      }
       
-      // For now, update locally until API is implemented
+      await associatesService.updateDeliveryStatus(associate.value.id, deliveryData)
+      
+      // Update local state
       associate.value.photoVideoAuthorized = true
       
       console.log('Photo/video authorization marked as delivered for associate:', associate.value)
@@ -992,10 +1006,17 @@ const markMedicalCertificateDelivered = async () => {
   
   if (confirmed) {
     try {
-      // TODO: Implement API call to mark medical certificate as delivered
-      // await associatesService.markMedicalCertificateDelivered(associate.value.id)
+      // Prepare the data with all current values and update the specific field
+      const deliveryData = {
+        privacyModuleDelivered: associate.value.privacyModuleDelivered || false,
+        photoVideoAuthorized: associate.value.photoVideoAuthorized || false,
+        medicalCertificateDelivered: true,
+        sportMaterialModuleDelivered: associate.value.sportMaterialModuleDelivered || false
+      }
       
-      // For now, update locally until API is implemented
+      await associatesService.updateDeliveryStatus(associate.value.id, deliveryData)
+      
+      // Update local state
       associate.value.medicalCertificateDelivered = true
       
       console.log('Medical certificate marked as delivered for associate:', associate.value)
@@ -1014,10 +1035,17 @@ const markSportMaterialModuleDelivered = async () => {
   
   if (confirmed) {
     try {
-      // TODO: Implement API call to mark sport material module as delivered
-      // await associatesService.markSportMaterialModuleDelivered(associate.value.id)
+      // Prepare the data with all current values and update the specific field
+      const deliveryData = {
+        privacyModuleDelivered: associate.value.privacyModuleDelivered || false,
+        photoVideoAuthorized: associate.value.photoVideoAuthorized || false,
+        medicalCertificateDelivered: associate.value.medicalCertificateDelivered || false,
+        sportMaterialModuleDelivered: true
+      }
       
-      // For now, update locally until API is implemented
+      await associatesService.updateDeliveryStatus(associate.value.id, deliveryData)
+      
+      // Update local state
       associate.value.sportMaterialModuleDelivered = true
       
       console.log('Sport material module marked as delivered for associate:', associate.value)
