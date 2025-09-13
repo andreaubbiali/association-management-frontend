@@ -80,7 +80,7 @@
           </div>
           <div class="info-item">
             <label>Validity Year:</label>
-            <span>{{ associate.validityYear }}</span>
+            <span>{{ associate.validityYearStart }}/{{ associate.validityYearEnd }}</span>
           </div>
         </div>
       </div>

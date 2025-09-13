@@ -109,7 +109,7 @@
             <td>{{ formatDate(associate.user.birthDate) }}</td>
             <td>{{ associate.user.birthCity }}</td>
             <td>{{ associate.user.fiscalCode }}</td>
-            <td>{{ associate.validityYear }}</td>
+            <td>{{ associate.validityYearStart }}/{{ associate.validityYearEnd }}</td>
             <td class="payment-status">
               <span v-if="isAssociateFullyPaid(associate)" class="payment-status-icon paid">✓</span>
               <span v-else class="payment-status-icon unpaid">✗</span>
