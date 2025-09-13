@@ -10,3 +10,10 @@ Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://
 npm install
 npm run dev
 ```
+
+## docker publish
+
+```
+docker build -t ghcr.io/andreaubbiali/association-fe:latest .
+docker push ghcr.io/andreaubbiali/association-fe:latest
+```
