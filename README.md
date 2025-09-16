@@ -16,4 +16,7 @@ npm run dev
 ```
 docker build --platform linux/amd64 -t ghcr.io/andreaubbiali/association-fe:latest .
 docker push ghcr.io/andreaubbiali/association-fe:latest
+
+
+docker run --name=frontend --platform linux/amd64 -p 8080:8080 --restart always ghcr.io/andreaubbiali/association-fe:latest
 ```

@@ -7,7 +7,7 @@ FROM node:18-alpine AS build-stage
 WORKDIR /app
 
 # Accept build arguments for environment variables
-ARG VITE_API_BASE_URL
+ARG VITE_API_BASE_URL=https://management.bloomacademyasd.com/api/v1/
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files
@@ -19,8 +19,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Set production environment
+# Set production environment and mode
 ENV NODE_ENV=production
+ENV VITE_MODE=production
 
 # Build the application
 RUN npm run build

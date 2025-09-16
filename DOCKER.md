@@ -14,11 +14,11 @@ Make sure to update the production URL in `.env.production` before building for 
 To build the Docker image for this Vue.js application:
 
 ```bash
+# For production deployment (Linux AMD64) - uses production API URL by default
+docker build --platform linux/amd64 -t association-management-frontend .
+
 # For local development (ARM64 on Mac)
 docker build -t association-management-frontend .
-
-# For production deployment (Linux AMD64)
-docker build --platform linux/amd64 -t association-management-frontend .
 ```
 
 ### Building with Custom API URL
