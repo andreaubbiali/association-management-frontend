@@ -502,6 +502,22 @@
             
             <form @submit.prevent="confirmMarkFeePaid">
               <div class="form-group">
+                <label for="feePaymentMethod">Payment Method:</label>
+                <select 
+                  id="feePaymentMethod" 
+                  v-model="feePaymentMethod" 
+                  class="form-select"
+                  :disabled="markingFee"
+                  required
+                >
+                  <option value="">Select payment method...</option>
+                  <option value="cash">Cash</option>
+                  <option value="credit_card">Credit Card</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label class="checkbox-label">
                   <input 
                     type="checkbox" 
@@ -517,7 +533,7 @@
                 <button type="button" @click="closeFeePaymentModal" class="btn-secondary" :disabled="markingFee">
                   Cancel
                 </button>
-                <button type="submit" class="btn-primary" :disabled="markingFee">
+                <button type="submit" class="btn-primary" :disabled="markingFee || !feePaymentMethod">
                   <span v-if="markingFee" class="loading-spinner"></span>
                   {{ markingFee ? 'Processing...' : 'Mark as Paid' }}
                 </button>
@@ -578,6 +594,7 @@ const paymentDetails = ref({
 // Fee payment modal state
 const showFeePaymentModal = ref(false)
 const feeEmailPreference = ref(true)
+const feePaymentMethod = ref('')
 const markingFee = ref(false)
 
 // Payment form state
@@ -902,17 +919,18 @@ const markFeePaid = () => {
 const closeFeePaymentModal = () => {
   showFeePaymentModal.value = false
   feeEmailPreference.value = true
+  feePaymentMethod.value = ''
   markingFee.value = false
 }
 
 const confirmMarkFeePaid = async () => {
-  if (markingFee.value) return
+  if (markingFee.value || !feePaymentMethod.value) return
   
   markingFee.value = true
   
   try {
-    // Make API call to mark fee as paid with email preference
-    await associatesService.markFeePaid(associate.value.id, feeEmailPreference.value)
+    // Make API call to mark fee as paid with email preference and payment method
+    await associatesService.markFeePaid(associate.value.id, feeEmailPreference.value, feePaymentMethod.value)
     
     console.log('Fee marked as paid for associate:', associate.value)
     
