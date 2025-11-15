@@ -55,5 +55,20 @@ export const coursesService = {
       console.error('Error fetching course:', error)
       throw error
     }
+  },
+
+  /**
+   * Create a new course
+   * @param {Object} courseData - Course data to create
+   * @returns {Promise} API response
+   */
+  async createCourse(courseData) {
+    try {
+      const response = await api.post('/course', courseData)
+      return response.data
+    } catch (error) {
+      console.error('Error creating course:', error)
+      throw error
+    }
   }
 }
