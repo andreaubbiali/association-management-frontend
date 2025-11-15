@@ -12,6 +12,10 @@ const showNotImplemented = (feature) => {
 const goToAssociates = () => {
   router.push('/')
 }
+
+const goToCourses = () => {
+  router.push('/courses')
+}
 </script>
 
 <template>
@@ -19,7 +23,7 @@ const goToAssociates = () => {
     <nav class="main-nav">
       <button @click="goToAssociates" class="nav-button">Associates</button>
       <button @click="showNotImplemented('Users')" class="nav-button">Users</button>
-      <button @click="showNotImplemented('Courses')" class="nav-button">Courses</button>
+      <button @click="goToCourses" class="nav-button">Courses</button>
     </nav>
   </header>
   <RouterView />
