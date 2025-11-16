@@ -137,6 +137,10 @@
             <span>{{ associate.user.email }}</span>
           </div>
           <div class="info-item">
+            <label>Secondary email:</label>
+            <span>{{ associate.user.secondaryEmail ? associate.user.secondaryEmail : '-' }}</span>
+          </div>
+          <div class="info-item">
             <label>Phone number:</label>
             <span>{{ associate.user.phoneNumber }}</span>
           </div>
