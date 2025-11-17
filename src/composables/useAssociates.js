@@ -17,7 +17,7 @@ export function useAssociates() {
     email: '',
     associationYear: '',
     page: 1,
-    limit: 5
+    limit: parseInt(import.meta.env.VITE_ITEMS_PER_PAGE) || 5
   })
 
   // Computed properties
@@ -76,7 +76,7 @@ export function useAssociates() {
       email: '',
       associationYear: '',
       page: 1,
-      limit: filters.value.limit
+      limit: parseInt(import.meta.env.VITE_ITEMS_PER_PAGE) || 5
     }
     await fetchAssociates()
   }
