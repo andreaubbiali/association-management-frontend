@@ -17,7 +17,7 @@
 
       <AssociatesFilteredTable
         :associates="associates"
-        :items-per-page="5"
+        :items-per-page="itemsPerPage"
         :total-count="totalCount"
         :current-page="filters.page"
         @manage-associate="handleManage"
@@ -31,13 +31,18 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import AssociatesFilteredTable from '../components/AssociatesFilteredTable.vue'
 import { useAssociates } from '../composables/useAssociates.js'
 
 // Router
 const router = useRouter()
+
+// Environment-based pagination
+const itemsPerPage = computed(() => {
+  return parseInt(import.meta.env.VITE_ITEMS_PER_PAGE) || 5
+})
 
 // Use the associates composable
 const {
