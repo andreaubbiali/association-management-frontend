@@ -16,6 +16,10 @@ const goToAssociates = () => {
 const goToCourses = () => {
   router.push('/courses')
 }
+
+const goToReports = () => {
+  router.push('/reports')
+}
 </script>
 
 <template>
@@ -24,6 +28,7 @@ const goToCourses = () => {
       <button @click="goToAssociates" class="nav-button">Associates</button>
       <button @click="showNotImplemented('Users')" class="nav-button">Users</button>
       <button @click="goToCourses" class="nav-button">Courses</button>
+      <button @click="goToReports" class="nav-button">Reports</button>
     </nav>
   </header>
   <RouterView />

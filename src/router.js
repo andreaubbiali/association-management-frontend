@@ -4,6 +4,7 @@ import AssociateManage from './views/AssociateManage.vue'
 import Users from './views/Users.vue'
 import Courses from './views/Courses.vue'
 import Login from './views/Login.vue'
+import Reports from './views/Reports.vue'
 
 const routes = [
   { path: '/login', name: 'Login', component: Login },
@@ -11,7 +12,8 @@ const routes = [
   { path: '/associates', name: 'AssociatesPage', component: Associates, meta: { requiresAuth: true } },
   { path: '/associates/:id/manage', name: 'AssociateManage', component: AssociateManage, meta: { requiresAuth: true } },
   { path: '/users', name: 'Users', component: Users, meta: { requiresAuth: true } },
-  { path: '/courses', name: 'Courses', component: Courses, meta: { requiresAuth: true } }
+  { path: '/courses', name: 'Courses', component: Courses, meta: { requiresAuth: true } },
+  { path: '/reports', name: 'Reports', component: Reports, meta: { requiresAuth: true } }
 ]
 
 const router = createRouter({
