@@ -130,6 +130,24 @@ export const associatesService = {
       console.error('Error updating delivery status:', error)
       throw error
     }
+  },
+
+  /**
+   * Update birth date for an associate
+   * @param {number} userId - User ID
+   * @param {string} birthDate - Birth date in YYYY-MM-DD format
+   * @returns {Promise} API response
+   */
+  async updateBirthDate(userId, birthDate) {
+    try {
+      const response = await api.patch(`/user/${userId}`, {
+        birthDate
+      })
+      return response.data
+    } catch (error) {
+      console.error('Error updating birth date:', error)
+      throw error
+    }
   }
 }
 

@@ -158,7 +158,16 @@
           </div>
           <div class="info-item">
             <label>Birth Date:</label>
-            <span>{{ formatDate(associate.user.birthDate) }}</span>
+            <div class="fee-status-container">
+              <span>{{ formatDate(associate.user.birthDate) }}</span>
+              <button 
+                @click="openUpdateBirthDateModal" 
+                class="fee-action-btn email-btn"
+                title="Update birth date"
+              >
+                📅 Update
+              </button>
+            </div>
           </div>
           <div class="info-item">
             <label>Birth City:</label>
@@ -547,6 +556,48 @@
         </div>
       </div>
     </div>
+
+    <!-- Update Birth Date Modal -->
+    <div v-if="showUpdateBirthDateModal" class="modal-overlay" @click="closeUpdateBirthDateModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Update Birth Date</h3>
+          <button @click="closeUpdateBirthDateModal" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="birth-date-form">
+            <div class="associate-summary">
+              <p><strong>Associate:</strong> {{ associate?.user?.name }} {{ associate?.user?.lastName }}</p>
+              <p><strong>Current Birth Date:</strong> {{ formatDate(associate?.user?.birthDate) }}</p>
+            </div>
+            
+            <form @submit.prevent="confirmUpdateBirthDate">
+              <div class="form-group">
+                <label for="newBirthDate">New Birth Date:</label>
+                <input 
+                  id="newBirthDate"
+                  v-model="newBirthDate" 
+                  type="date" 
+                  class="form-input"
+                  :disabled="updatingBirthDate"
+                  required
+                >
+              </div>
+
+              <div class="form-actions">
+                <button type="button" @click="closeUpdateBirthDateModal" class="btn-secondary" :disabled="updatingBirthDate">
+                  Cancel
+                </button>
+                <button type="submit" class="btn-primary" :disabled="updatingBirthDate || !newBirthDate">
+                  <span v-if="updatingBirthDate" class="loading-spinner"></span>
+                  {{ updatingBirthDate ? 'Updating...' : 'Update Birth Date' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -600,6 +651,11 @@ const showFeePaymentModal = ref(false)
 const feeEmailPreference = ref(true)
 const feePaymentMethod = ref('')
 const markingFee = ref(false)
+
+// Birth date update modal state
+const showUpdateBirthDateModal = ref(false)
+const newBirthDate = ref('')
+const updatingBirthDate = ref(false)
 
 // Payment form state
 const paymentType = ref('')
@@ -1078,6 +1134,49 @@ const markSportMaterialModuleDelivered = async () => {
       const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
       alert(`Failed to mark sport material module as delivered: ${errorMessage}`)
     }
+  }
+}
+
+const openUpdateBirthDateModal = () => {
+  showUpdateBirthDateModal.value = true
+  // Pre-populate with current birth date in YYYY-MM-DD format
+  if (associate.value?.user?.birthDate) {
+    const currentDate = new Date(associate.value.user.birthDate)
+    newBirthDate.value = currentDate.toISOString().split('T')[0]
+  }
+}
+
+const closeUpdateBirthDateModal = () => {
+  showUpdateBirthDateModal.value = false
+  newBirthDate.value = ''
+  updatingBirthDate.value = false
+}
+
+const confirmUpdateBirthDate = async () => {
+  if (updatingBirthDate.value || !newBirthDate.value) return
+  
+  updatingBirthDate.value = true
+  
+  try {
+    // Make API call to update birth date
+    await associatesService.updateBirthDate(associate.value.user.id, newBirthDate.value)
+    
+    console.log('Birth date updated for user:', associate.value.user.id, 'to:', newBirthDate.value)
+    
+    // Update local state
+    associate.value.user.birthDate = newBirthDate.value
+    
+    // Close modal
+    closeUpdateBirthDateModal()
+    
+    alert('Birth date updated successfully!')
+    
+  } catch (err) {
+    console.error('Failed to update birth date:', err)
+    const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+    alert(`Failed to update birth date: ${errorMessage}`)
+  } finally {
+    updatingBirthDate.value = false
   }
 }
 </script>
@@ -1766,6 +1865,25 @@ const markSportMaterialModuleDelivered = async () => {
 }
 
 .fee-summary p {
+  margin: 0.5rem 0;
+  color: #333;
+}
+
+/* Birth Date Update Modal Styles */
+.birth-date-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.associate-summary {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.associate-summary p {
   margin: 0.5rem 0;
   color: #333;
 }
