@@ -772,7 +772,7 @@ const fetchAvailableCourses = async () => {
   coursesError.value = null
   
   try {
-    const response = await coursesService.getActiveCourses()
+    const response = await coursesService.getCourses()
     
     // Handle different response structures
     if (Array.isArray(response)) {

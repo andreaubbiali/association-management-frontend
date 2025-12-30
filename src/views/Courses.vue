@@ -246,7 +246,7 @@ const fetchActiveCourses = async () => {
   error.value = null
   
   try {
-    const response = await coursesService.getActiveCourses()
+    const response = await coursesService.getCourses()
     courses.value = response || []
   } catch (err) {
     error.value = 'Failed to load courses. Please try again.'
