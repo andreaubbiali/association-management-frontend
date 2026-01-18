@@ -401,6 +401,14 @@
                     <button @click="sendPaymentReminder(payment)" class="btn-secondary payment-btn">
                       📧 Send Reminder
                     </button>
+                    <button 
+                      @click="openUpdatePaymentModal(payment)" 
+                      class="btn-update payment-btn-inline"
+                      :disabled="payment.paymentDate"
+                      :title="payment.paymentDate ? 'Already paid' : 'Update payment amount'"
+                    >
+                      Update
+                    </button>
                   </div>
                 </div>
               </div>
@@ -598,6 +606,60 @@
         </div>
       </div>
     </div>
+
+    <!-- Update Payment Amount Modal -->
+    <div v-if="showUpdatePaymentModal" class="modal-overlay" @click="closeUpdatePaymentModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Update Payment Amount</h3>
+          <button @click="closeUpdatePaymentModal" class="modal-close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="selectedPaymentForUpdate" class="payment-update-form">
+            <div class="payment-summary">
+              <p><strong>Payment Type:</strong> {{ formatPaymentType(selectedPaymentForUpdate.paymentType) }}</p>
+              <p><strong>Current Amount:</strong> €{{ selectedPaymentForUpdate.amount }}</p>
+            </div>
+            
+            <form @submit.prevent="confirmUpdatePaymentAmount">
+              <div class="form-group">
+                <label for="newAmount">New Amount (€):</label>
+                <input 
+                  id="newAmount"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model="newPaymentAmount" 
+                  class="form-input"
+                  :disabled="updatingPayment"
+                  required
+                  placeholder="Enter new amount"
+                />
+              </div>
+
+              <div class="form-actions">
+                <button 
+                  type="button" 
+                  @click="closeUpdatePaymentModal" 
+                  class="btn-secondary"
+                  :disabled="updatingPayment"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  class="btn-primary"
+                  :disabled="!newPaymentAmount || updatingPayment"
+                >
+                  <span v-if="updatingPayment" class="loading-spinner"></span>
+                  {{ updatingPayment ? 'Updating...' : 'Update Amount' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -607,6 +669,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAssociateManage } from '../composables/useAssociateManage.js'
 import { coursesService } from '../services/coursesService.js'
 import { associatesService } from '../services/associatesService.js'
+import { paymentService } from '../services/paymentService.js'
 
 // Router
 const route = useRoute()
@@ -656,6 +719,12 @@ const markingFee = ref(false)
 const showUpdateBirthDateModal = ref(false)
 const newBirthDate = ref('')
 const updatingBirthDate = ref(false)
+
+// Payment update modal state
+const showUpdatePaymentModal = ref(false)
+const selectedPaymentForUpdate = ref(null)
+const newPaymentAmount = ref('')
+const updatingPayment = ref(false)
 
 // Payment form state
 const paymentType = ref('')
@@ -1177,6 +1246,58 @@ const confirmUpdateBirthDate = async () => {
     alert(`Failed to update birth date: ${errorMessage}`)
   } finally {
     updatingBirthDate.value = false
+  }
+}
+
+// Payment update methods
+const openUpdatePaymentModal = (payment) => {
+  selectedPaymentForUpdate.value = payment
+  newPaymentAmount.value = payment.amount
+  showUpdatePaymentModal.value = true
+}
+
+const closeUpdatePaymentModal = () => {
+  showUpdatePaymentModal.value = false
+  selectedPaymentForUpdate.value = null
+  newPaymentAmount.value = ''
+  updatingPayment.value = false
+}
+
+const confirmUpdatePaymentAmount = async () => {
+  if (updatingPayment.value || !newPaymentAmount.value || !selectedPaymentForUpdate.value) return
+  
+  updatingPayment.value = true
+  
+  try {
+    const paymentData = {
+      amount: parseFloat(newPaymentAmount.value)
+    }
+    
+    // Make API call to update payment amount
+    await paymentService.updatePaymentAmount(selectedPaymentForUpdate.value.id, paymentData)
+    
+    console.log('Payment amount updated for payment ID:', selectedPaymentForUpdate.value.id)
+    
+    // Refresh associate data to show updated payment amount
+    await fetchAssociate(associateId)
+    
+    // Update selected course with fresh data
+    const updatedCourse = associate.value.courses.find(c => c.id === selectedCourse.value.id)
+    if (updatedCourse) {
+      selectedCourse.value = updatedCourse
+    }
+    
+    // Close modal
+    closeUpdatePaymentModal()
+    
+    alert('Payment amount updated successfully!')
+    
+  } catch (err) {
+    console.error('Failed to update payment amount:', err)
+    const errorMessage = err.response?.data?.error || err.message || 'Unknown error'
+    alert(`Failed to update payment amount: ${errorMessage}`)
+  } finally {
+    updatingPayment.value = false
   }
 }
 </script>
@@ -1753,24 +1874,26 @@ const confirmUpdateBirthDate = async () => {
 
 .payment-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem;
   border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border-radius: 8px;
   background: white;
-  transition: box-shadow 0.2s;
+  transition: all 0.2s;
 }
 
 .payment-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #007bff;
 }
 
 .payment-info {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   flex: 1;
+  min-width: 200px;
 }
 
 .payment-type {
@@ -1783,6 +1906,35 @@ const confirmUpdateBirthDate = async () => {
   font-size: 1.1rem;
   font-weight: bold;
   color: #007bff;
+  margin-right: 0.5rem;
+}
+
+.btn-update {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: 1px solid #17a2b8;
+  background: white;
+  color: #17a2b8;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-update:hover:not(:disabled) {
+  background: #17a2b8;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(23, 162, 184, 0.3);
+}
+
+.btn-update:disabled {
+  border-color: #dee2e6;
+  color: #adb5bd;
+  background: #f8f9fa;
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .payment-status {
@@ -1808,15 +1960,17 @@ const confirmUpdateBirthDate = async () => {
 
 .payment-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .payment-btn {
-  padding: 0.375rem 0.75rem;
-  font-size: 0.85rem;
-  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
   border: none;
+  white-space: nowrap;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s;
