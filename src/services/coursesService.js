@@ -70,5 +70,19 @@ export const coursesService = {
       console.error('Error creating course:', error)
       throw error
     }
+  },
+
+  /**
+   * Get all course types
+   * @returns {Promise} API response with course types
+   */
+  async getCourseTypes() {
+    try {
+      const response = await api.get('/course-type')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching course types:', error)
+      throw error
+    }
   }
 }

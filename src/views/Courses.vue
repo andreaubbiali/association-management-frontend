@@ -130,8 +130,13 @@
               class="form-select"
             >
               <option value="">Select course type...</option>
-              <option value="Gym">Gym</option>
-              <option value="Workshop">Workshop</option>
+              <option 
+                v-for="courseType in courseTypes" 
+                :key="courseType.id" 
+                :value="courseType.id"
+              >
+                {{ courseType.name }}
+              </option>
             </select>
           </div>
 
@@ -183,6 +188,7 @@ import { coursesService } from '../services/coursesService.js'
 
 // Reactive data
 const courses = ref([])
+const courseTypes = ref([])
 const loading = ref(false)
 const error = ref(null)
 const sortField = ref('')
@@ -256,6 +262,15 @@ const fetchActiveCourses = async () => {
   }
 }
 
+const fetchCourseTypes = async () => {
+  try {
+    const response = await coursesService.getCourseTypes()
+    courseTypes.value = response || []
+  } catch (err) {
+    console.error('Error fetching course types:', err)
+  }
+}
+
 const sortBy = (field) => {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -318,6 +333,7 @@ const submitCourse = async () => {
 // Lifecycle
 onMounted(() => {
   fetchActiveCourses()
+  fetchCourseTypes()
 })
 </script>
 
