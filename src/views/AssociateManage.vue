@@ -448,6 +448,7 @@
                   <option value="">Select receipt type...</option>
                   <option value="sport_receipt">Sport Receipt</option>
                   <option value="didactic_receipt">Didactic Receipt</option>
+                  <option value="commercial_receipt">Commercial Receipt</option>
                 </select>
               </div>
 
