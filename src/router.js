@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Associates from './views/Associates.vue'
 import AssociateManage from './views/AssociateManage.vue'
+import CreateAssociate from './views/CreateAssociate.vue'
 import Users from './views/Users.vue'
 import Courses from './views/Courses.vue'
 import Login from './views/Login.vue'
@@ -10,6 +11,7 @@ const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/', name: 'Associates', component: Associates, meta: { requiresAuth: true } },
   { path: '/associates', name: 'AssociatesPage', component: Associates, meta: { requiresAuth: true } },
+  { path: '/associates/create', name: 'CreateAssociate', component: CreateAssociate, meta: { requiresAuth: true } },
   { path: '/associates/:id/manage', name: 'AssociateManage', component: AssociateManage, meta: { requiresAuth: true } },
   { path: '/users', name: 'Users', component: Users, meta: { requiresAuth: true } },
   { path: '/courses', name: 'Courses', component: Courses, meta: { requiresAuth: true } },

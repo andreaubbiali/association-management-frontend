@@ -5,6 +5,21 @@ import api from './api.js'
  */
 export const associatesService = {
   /**
+   * Create a new associate
+   * @param {Object} payload - Associate creation payload
+   * @returns {Promise} API response
+   */
+  async createAssociate(payload) {
+    try {
+      const response = await api.post('/associate', payload)
+      return response.data
+    } catch (error) {
+      console.error('Error creating associate:', error)
+      throw error
+    }
+  },
+
+  /**
    * Get all associates with optional filters
    * @param {Object} filters - Filter parameters
    * @param {string} filters.bloomId - Filter by Bloom id
