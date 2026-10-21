@@ -2,6 +2,26 @@ import { ref } from 'vue'
 import { usersService } from '../services/usersService.js'
 
 /**
+ * Runs an async fetch against the given loading/error/data refs, following
+ * the same loading-true/clear-error/try/catch/finally shape every fetch in
+ * this composable needs.
+ */
+async function runFetch({ loadingRef, errorRef, dataRef, fetcher, fallbackValue, errorLabel }) {
+  loadingRef.value = true
+  errorRef.value = null
+
+  try {
+    dataRef.value = await fetcher()
+  } catch (err) {
+    console.error(`useUserManage: fetch ${errorLabel} failed:`, err)
+    errorRef.value = err.response?.data?.message || err.message || `Failed to fetch ${errorLabel}`
+    dataRef.value = fallbackValue
+  } finally {
+    loadingRef.value = false
+  }
+}
+
+/**
  * Composable for managing a single user's detail and relations data.
  * The user-detail fetch and the relations fetch are two independent
  * operations, each with its own loading/error state.
@@ -21,42 +41,28 @@ export function useUserManage() {
    * Fetch a single user by ID
    * @param {number|string} id - User ID
    */
-  const fetchUser = async (id) => {
-    loading.value = true
-    error.value = null
-
-    try {
-      const response = await usersService.getUser(id)
-      user.value = response
-    } catch (err) {
-      console.error('useUserManage: fetchUser failed:', err)
-      error.value = err.response?.data?.message || err.message || 'Failed to fetch user'
-      user.value = null
-    } finally {
-      loading.value = false
-    }
-  }
+  const fetchUser = (id) => runFetch({
+    loadingRef: loading,
+    errorRef: error,
+    dataRef: user,
+    fetcher: () => usersService.getUser(id),
+    fallbackValue: null,
+    errorLabel: 'user'
+  })
 
   /**
    * Fetch the relations for a given user. Failures here never clear
    * or block the already-loaded user-detail state.
    * @param {number|string} id - User ID
    */
-  const fetchUserRelations = async (id) => {
-    relationsLoading.value = true
-    relationsError.value = null
-
-    try {
-      const response = await usersService.getUserRelations(id)
-      relations.value = response
-    } catch (err) {
-      console.error('useUserManage: fetchUserRelations failed:', err)
-      relationsError.value = err.response?.data?.message || err.message || 'Failed to fetch relations'
-      relations.value = []
-    } finally {
-      relationsLoading.value = false
-    }
-  }
+  const fetchUserRelations = (id) => runFetch({
+    loadingRef: relationsLoading,
+    errorRef: relationsError,
+    dataRef: relations,
+    fetcher: () => usersService.getUserRelations(id),
+    fallbackValue: [],
+    errorLabel: 'relations'
+  })
 
   /**
    * Clear only the user-detail error state
