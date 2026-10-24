@@ -37,6 +37,10 @@ export function useUserManage() {
   const relationsLoading = ref(false)
   const relationsError = ref(null)
 
+  // Update (mutation) state
+  const updating = ref(false)
+  const updateError = ref(null)
+
   /**
    * Fetch a single user by ID
    * @param {number|string} id - User ID
@@ -65,6 +69,31 @@ export function useUserManage() {
   })
 
   /**
+   * Update a user's editable fields. On success, replaces `user` with the
+   * server's response (same full shape as fetchUser) so the detail card can
+   * re-render immediately without a refetch. On failure, `user` is left
+   * untouched and `updateError` holds the DRF field-error object
+   * (e.g. { fiscalCode: ["..."] }) for per-field display.
+   * @param {number|string} id - User ID
+   * @param {Object} data - Any subset of the 13 editable fields
+   * @returns {Promise<boolean>} true on success, false on failure
+   */
+  const updateUser = async (id, data) => {
+    updating.value = true
+    updateError.value = null
+    try {
+      user.value = await usersService.updateUser(id, data)
+      return true
+    } catch (err) {
+      console.error('useUserManage: updateUser failed:', err)
+      updateError.value = err.response?.data || { non_field_errors: [err.message || 'Failed to update user'] }
+      return false
+    } finally {
+      updating.value = false
+    }
+  }
+
+  /**
    * Clear only the user-detail error state
    */
   const clearError = () => {
@@ -79,6 +108,13 @@ export function useUserManage() {
   }
 
   /**
+   * Clear only the update error state
+   */
+  const clearUpdateError = () => {
+    updateError.value = null
+  }
+
+  /**
    * Reset all state back to initial values
    */
   const reset = () => {
@@ -88,6 +124,8 @@ export function useUserManage() {
     relations.value = []
     relationsLoading.value = false
     relationsError.value = null
+    updating.value = false
+    updateError.value = null
   }
 
   return {
@@ -98,12 +136,16 @@ export function useUserManage() {
     relations,
     relationsLoading,
     relationsError,
+    updating,
+    updateError,
 
     // Methods
     fetchUser,
     fetchUserRelations,
+    updateUser,
     clearError,
     clearRelationsError,
+    clearUpdateError,
     reset
   }
 }

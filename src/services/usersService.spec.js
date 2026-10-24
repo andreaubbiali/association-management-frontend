@@ -114,6 +114,35 @@ describe('usersService', () => {
     })
   })
 
+  describe('updateUser', () => {
+    it('calls PATCH /user/:id with the given id and data payload', async () => {
+      const payload = { name: 'Mario', lastName: 'Rossi' }
+      api.patch.mockResolvedValue({ data: { id: 1, ...payload } })
+
+      await usersService.updateUser(1, payload)
+
+      expect(api.patch).toHaveBeenCalledWith('/user/1', payload)
+    })
+
+    it('returns response.data (the full updated user) on success', async () => {
+      const payload = { id: 1, bloomId: 'BLOOM_20251', name: 'Mario', lastName: 'Rossi', fiscalCode: 'RSSMRA80A01H501Z' }
+      api.patch.mockResolvedValue({ data: payload })
+
+      const result = await usersService.updateUser(1, { name: 'Mario' })
+
+      expect(result).toEqual(payload)
+    })
+
+    it('rethrows the error when the request fails (e.g. duplicate fiscalCode 400)', async () => {
+      const apiError = {
+        response: { status: 400, data: { fiscalCode: ['A user with this fiscal code already exists.'] } }
+      }
+      api.patch.mockRejectedValue(apiError)
+
+      await expect(usersService.updateUser(1, { fiscalCode: 'RSSMRA80A01H501Z' })).rejects.toEqual(apiError)
+    })
+  })
+
   describe('getUserRelations', () => {
     it('calls GET /user/:id/relations with the given id', async () => {
       api.get.mockResolvedValue({ data: [] })

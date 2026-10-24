@@ -22,7 +22,15 @@
 
     <!-- User Information -->
     <div v-if="!loading && !error && user" class="details-card">
-      <h2>User Information</h2>
+      <div class="card-header">
+        <h2>User Information</h2>
+        <button v-if="!isEditing" @click="startEdit" class="edit-btn">Edit</button>
+      </div>
+
+      <p v-if="isEditing && updateError?.non_field_errors" class="error-message">
+        {{ updateError.non_field_errors[0] }}
+      </p>
+
       <div class="info-grid">
         <div class="info-item">
           <label>Bloom Id:</label>
@@ -30,55 +38,107 @@
         </div>
         <div class="info-item">
           <label>Name:</label>
-          <span>{{ user.name }}</span>
+          <span v-if="!isEditing">{{ user.name }}</span>
+          <template v-else>
+            <input v-model="editForm.name" type="text" class="form-input" />
+            <p v-if="updateError?.name" class="field-error">{{ updateError.name[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Last Name:</label>
-          <span>{{ user.lastName }}</span>
+          <span v-if="!isEditing">{{ user.lastName }}</span>
+          <template v-else>
+            <input v-model="editForm.lastName" type="text" class="form-input" />
+            <p v-if="updateError?.lastName" class="field-error">{{ updateError.lastName[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Email:</label>
-          <span>{{ user.email }}</span>
+          <span v-if="!isEditing">{{ user.email }}</span>
+          <template v-else>
+            <input v-model="editForm.email" type="email" class="form-input" />
+            <p v-if="updateError?.email" class="field-error">{{ updateError.email[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Secondary Email:</label>
-          <span>{{ user.secondaryEmail || '-' }}</span>
+          <span v-if="!isEditing">{{ user.secondaryEmail || '-' }}</span>
+          <template v-else>
+            <input v-model="editForm.secondaryEmail" type="email" class="form-input" />
+            <p v-if="updateError?.secondaryEmail" class="field-error">{{ updateError.secondaryEmail[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Fiscal Code:</label>
-          <span>{{ user.fiscalCode }}</span>
+          <span v-if="!isEditing">{{ user.fiscalCode }}</span>
+          <template v-else>
+            <input v-model="editForm.fiscalCode" type="text" class="form-input" />
+            <p v-if="updateError?.fiscalCode" class="field-error">{{ updateError.fiscalCode[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Birth Date:</label>
-          <span>{{ formatDate(user.birthDate) }}</span>
+          <span v-if="!isEditing">{{ formatDate(user.birthDate) }}</span>
+          <template v-else>
+            <input v-model="editForm.birthDate" type="date" class="form-input" />
+            <p v-if="updateError?.birthDate" class="field-error">{{ updateError.birthDate[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Birth City:</label>
-          <span>{{ user.birthCity }}</span>
+          <span v-if="!isEditing">{{ user.birthCity }}</span>
+          <template v-else>
+            <input v-model="editForm.birthCity" type="text" class="form-input" />
+            <p v-if="updateError?.birthCity" class="field-error">{{ updateError.birthCity[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Identity Card Number:</label>
-          <span>{{ user.identityCardNumber || '-' }}</span>
+          <span v-if="!isEditing">{{ user.identityCardNumber || '-' }}</span>
+          <template v-else>
+            <input v-model="editForm.identityCardNumber" type="text" class="form-input" />
+            <p v-if="updateError?.identityCardNumber" class="field-error">{{ updateError.identityCardNumber[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Residence Address:</label>
-          <span>{{ user.residenceAddress }}</span>
+          <span v-if="!isEditing">{{ user.residenceAddress }}</span>
+          <template v-else>
+            <input v-model="editForm.residenceAddress" type="text" class="form-input" />
+            <p v-if="updateError?.residenceAddress" class="field-error">{{ updateError.residenceAddress[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Residence City:</label>
-          <span>{{ user.residenceCity }}</span>
+          <span v-if="!isEditing">{{ user.residenceCity }}</span>
+          <template v-else>
+            <input v-model="editForm.residenceCity" type="text" class="form-input" />
+            <p v-if="updateError?.residenceCity" class="field-error">{{ updateError.residenceCity[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Residence CAP:</label>
-          <span>{{ user.residenceCAP }}</span>
+          <span v-if="!isEditing">{{ user.residenceCAP }}</span>
+          <template v-else>
+            <input v-model="editForm.residenceCAP" type="text" class="form-input" />
+            <p v-if="updateError?.residenceCAP" class="field-error">{{ updateError.residenceCAP[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Residence Province:</label>
-          <span>{{ user.residenceProvince }}</span>
+          <span v-if="!isEditing">{{ user.residenceProvince }}</span>
+          <template v-else>
+            <input v-model="editForm.residenceProvince" type="text" class="form-input" />
+            <p v-if="updateError?.residenceProvince" class="field-error">{{ updateError.residenceProvince[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Phone Number:</label>
-          <span>{{ user.phoneNumber }}</span>
+          <span v-if="!isEditing">{{ user.phoneNumber }}</span>
+          <template v-else>
+            <input v-model="editForm.phoneNumber" type="text" class="form-input" />
+            <p v-if="updateError?.phoneNumber" class="field-error">{{ updateError.phoneNumber[0] }}</p>
+          </template>
         </div>
         <div class="info-item">
           <label>Data Validated:</label>
@@ -86,6 +146,11 @@
             {{ user.dataValidated ? '✓' : '✗' }}
           </span>
         </div>
+      </div>
+
+      <div v-if="isEditing" class="edit-actions">
+        <button @click="cancelEdit" class="btn-secondary">Cancel</button>
+        <button @click="saveEdit" class="btn-primary" :disabled="updating">Save</button>
       </div>
     </div>
 
@@ -136,7 +201,7 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserManage } from '../composables/useUserManage.js'
 
@@ -145,6 +210,23 @@ const router = useRouter()
 
 const userId = route.params.id
 
+// The 13 fields this page allows editing, per the edit-user-data feature.
+const EDITABLE_FIELDS = [
+  'name',
+  'lastName',
+  'email',
+  'secondaryEmail',
+  'fiscalCode',
+  'birthDate',
+  'birthCity',
+  'identityCardNumber',
+  'residenceAddress',
+  'residenceCity',
+  'residenceCAP',
+  'residenceProvince',
+  'phoneNumber'
+]
+
 const {
   user,
   loading,
@@ -152,11 +234,18 @@ const {
   relations,
   relationsLoading,
   relationsError,
+  updating,
+  updateError,
   fetchUser,
   fetchUserRelations,
+  updateUser,
   clearError,
-  clearRelationsError
+  clearRelationsError,
+  clearUpdateError
 } = useUserManage()
+
+const isEditing = ref(false)
+const editForm = reactive({})
 
 onMounted(async () => {
   await Promise.all([
@@ -167,6 +256,25 @@ onMounted(async () => {
 
 const goBack = () => {
   router.push('/users')
+}
+
+const startEdit = () => {
+  EDITABLE_FIELDS.forEach((field) => {
+    editForm[field] = user.value[field]
+  })
+  isEditing.value = true
+}
+
+const cancelEdit = () => {
+  isEditing.value = false
+  clearUpdateError()
+}
+
+const saveEdit = async () => {
+  const success = await updateUser(userId, { ...editForm })
+  if (success) {
+    isEditing.value = false
+  }
 }
 
 const retryFetchUser = () => {
@@ -275,6 +383,89 @@ const formatDate = (dateString) => {
   color: #333;
   border-bottom: 2px solid #007bff;
   padding-bottom: 0.5rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h2 {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.edit-btn {
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.edit-btn:hover {
+  background: #0056b3;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background: white;
+  color: #333;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.field-error {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
 }
 
 .info-grid {
