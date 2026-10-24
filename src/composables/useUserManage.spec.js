@@ -5,7 +5,8 @@ import { useUserManage } from './useUserManage.js'
 vi.mock('../services/usersService.js', () => ({
   usersService: {
     getUser: vi.fn(),
-    getUserRelations: vi.fn()
+    getUserRelations: vi.fn(),
+    updateUser: vi.fn()
   }
 }))
 
@@ -14,8 +15,8 @@ describe('useUserManage', () => {
     vi.clearAllMocks()
   })
 
-  it('initializes with null user, empty relations array, and all loading/error flags falsy', () => {
-    const { user, loading, error, relations, relationsLoading, relationsError } = useUserManage()
+  it('initializes with null user, empty relations array, and all loading/error/updating flags falsy', () => {
+    const { user, loading, error, relations, relationsLoading, relationsError, updating, updateError } = useUserManage()
 
     expect(user.value).toBeNull()
     expect(loading.value).toBe(false)
@@ -23,6 +24,8 @@ describe('useUserManage', () => {
     expect(relations.value).toEqual([])
     expect(relationsLoading.value).toBe(false)
     expect(relationsError.value).toBeNull()
+    expect(updating.value).toBe(false)
+    expect(updateError.value).toBeNull()
   })
 
   describe('fetchUser', () => {
@@ -130,6 +133,74 @@ describe('useUserManage', () => {
     })
   })
 
+  describe('updateUser', () => {
+    it('sets updating true while in flight, replaces user with the server response on success, then sets updating false', async () => {
+      let resolvePromise
+      usersService.updateUser.mockReturnValue(new Promise((resolve) => { resolvePromise = resolve }))
+
+      const { updateUser, updating, user, updateError } = useUserManage()
+      const promise = updateUser(1, { name: 'Mario' })
+
+      expect(updating.value).toBe(true)
+
+      const payload = { id: 1, bloomId: 'BLOOM_20251', name: 'Mario', lastName: 'Rossi' }
+      resolvePromise(payload)
+      const result = await promise
+
+      expect(result).toBe(true)
+      expect(updating.value).toBe(false)
+      expect(updateError.value).toBeNull()
+      expect(user.value).toEqual(payload)
+      expect(usersService.updateUser).toHaveBeenCalledWith(1, { name: 'Mario' })
+    })
+
+    it('resolves false, sets updateError from the response body, and leaves the last-known-good user untouched on failure', async () => {
+      const existingUser = { id: 1, bloomId: 'BLOOM_20251', name: 'Mario', lastName: 'Rossi', fiscalCode: 'RSSMRA80A01H501Z' }
+      usersService.getUser.mockResolvedValue(existingUser)
+      usersService.updateUser.mockRejectedValue({
+        response: { status: 400, data: { fiscalCode: ['A user with this fiscal code already exists.'] } }
+      })
+
+      const { fetchUser, updateUser, updating, user, updateError } = useUserManage()
+      await fetchUser(1)
+      expect(user.value).toEqual(existingUser)
+
+      const result = await updateUser(1, { fiscalCode: 'DUPLICATE123' })
+
+      expect(result).toBe(false)
+      expect(updating.value).toBe(false)
+      expect(updateError.value).toEqual({ fiscalCode: ['A user with this fiscal code already exists.'] })
+      // The last-known-good user must not be corrupted by the failed edit.
+      expect(user.value).toEqual(existingUser)
+    })
+
+    it('falls back to a non_field_errors shape when the failure has no response body', async () => {
+      usersService.updateUser.mockRejectedValue(new Error('Network error'))
+
+      const { updateUser, updateError } = useUserManage()
+      const result = await updateUser(1, { name: 'Mario' })
+
+      expect(result).toBe(false)
+      expect(updateError.value).toEqual({ non_field_errors: ['Network error'] })
+    })
+  })
+
+  describe('clearUpdateError', () => {
+    it('clears only updateError, leaving user-detail and relations error state untouched', async () => {
+      usersService.updateUser.mockRejectedValue({ response: { data: { fiscalCode: ['Duplicate'] } } })
+      usersService.getUserRelations.mockRejectedValue(new Error('Relations down'))
+
+      const { updateUser, fetchUserRelations, clearUpdateError, updateError, relationsError } = useUserManage()
+      await updateUser(1, { fiscalCode: 'X' })
+      await fetchUserRelations(1)
+
+      clearUpdateError()
+
+      expect(updateError.value).toBeNull()
+      expect(relationsError.value).toBe('Relations down')
+    })
+  })
+
   describe('clearError', () => {
     it('clears only the user-detail error, leaving relationsError untouched', async () => {
       usersService.getUser.mockRejectedValue(new Error('User not found'))
@@ -163,13 +234,18 @@ describe('useUserManage', () => {
   })
 
   describe('reset', () => {
-    it('resets user, relations, loading and error state back to initial values', async () => {
+    it('resets user, relations, loading, error and update state back to initial values', async () => {
       usersService.getUser.mockResolvedValue({ id: 1, bloomId: 'BLOOM_20251' })
       usersService.getUserRelations.mockResolvedValue([{ id: 10, relationType: 'parent' }])
+      usersService.updateUser.mockRejectedValue({ response: { data: { fiscalCode: ['Duplicate'] } } })
 
-      const { fetchUser, fetchUserRelations, reset, user, relations, loading, error, relationsLoading, relationsError } = useUserManage()
+      const {
+        fetchUser, fetchUserRelations, updateUser, reset,
+        user, relations, loading, error, relationsLoading, relationsError, updating, updateError
+      } = useUserManage()
       await fetchUser(1)
       await fetchUserRelations(1)
+      await updateUser(1, { fiscalCode: 'X' })
 
       reset()
 
@@ -179,6 +255,8 @@ describe('useUserManage', () => {
       expect(error.value).toBeNull()
       expect(relationsLoading.value).toBe(false)
       expect(relationsError.value).toBeNull()
+      expect(updating.value).toBe(false)
+      expect(updateError.value).toBeNull()
     })
   })
 })

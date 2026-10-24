@@ -49,6 +49,22 @@ export const usersService = {
   },
 
   /**
+   * Update a user's editable fields (partial update)
+   * @param {number} id - User ID
+   * @param {Object} data - Any subset of the 13 editable fields
+   * @returns {Promise} API response (full updated user, same shape as getUser)
+   */
+  async updateUser(id, data) {
+    try {
+      const response = await api.patch(`/user/${id}`, data)
+      return response.data
+    } catch (error) {
+      console.error('Error updating user:', error)
+      throw error
+    }
+  },
+
+  /**
    * Get the relations for a given user
    * @param {number} id - User ID
    * @returns {Promise} API response (flat array)
