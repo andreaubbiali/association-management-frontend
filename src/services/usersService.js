@@ -77,5 +77,50 @@ export const usersService = {
       console.error('Error fetching user relations:', error)
       throw error
     }
+  },
+
+  /**
+   * Create a standalone User (identity data only, optional relations array
+   * for minors). The only service method whose caller needs the response
+   * status itself (201 newly created vs 200 fiscalCode already matched an
+   * existing user), so this resolves with { data, status } rather than the
+   * bare body every other method on this service returns.
+   * @param {Object} payload - 13 identity fields + optional relations array
+   * @returns {Promise<{data: Object, status: number}>}
+   */
+  async createUser(payload) {
+    try {
+      const response = await api.post('/user', payload)
+      return { data: response.data, status: response.status }
+    } catch (error) {
+      console.error('Error creating user:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Get a user's paginated association (Associate) history.
+   * @param {number} userId - User ID
+   * @param {Object} params - { page, limit }
+   * @returns {Promise} API response (DRF pagination envelope)
+   */
+  async getAssociateHistory(userId, { page, limit } = {}) {
+    try {
+      const params = new URLSearchParams()
+      if (page !== undefined && page !== null && page !== '') {
+        params.append('page', page)
+      }
+      if (limit !== undefined && limit !== null && limit !== '') {
+        params.append('limit', limit)
+      }
+
+      const queryString = params.toString()
+      const url = queryString ? `/user/${userId}/associates?${queryString}` : `/user/${userId}/associates`
+      const response = await api.get(url)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching associate history:', error)
+      throw error
+    }
   }
 }

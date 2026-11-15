@@ -2,6 +2,7 @@
   <div class="users-page">
     <div class="users-header">
       <h1>Users</h1>
+      <button @click="goToAddUser" class="add-user-btn">+ Add User</button>
     </div>
 
     <!-- Loading State -->
@@ -74,6 +75,10 @@ const handlePageChange = async (page) => {
 const handleViewUser = (user) => {
   router.push(`/users/${user.id}`)
 }
+
+const goToAddUser = () => {
+  router.push('/users/create')
+}
 </script>
 
 <style scoped>
@@ -85,11 +90,29 @@ const handleViewUser = (user) => {
 
 .users-header {
   margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .users-header h1 {
   margin: 0;
   color: #2c3e50;
+}
+
+.add-user-btn {
+  border: none;
+  border-radius: 8px;
+  background: #2c3e50;
+  color: #fff;
+  padding: 0.65rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-user-btn:hover {
+  background: #223241;
 }
 
 .loading-container,

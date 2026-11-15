@@ -71,6 +71,15 @@ function mountUserDetail(overrides = {}) {
     updateUser: vi.fn(),
     clearUpdateError: vi.fn(),
     reset: vi.fn(),
+    // associate-renewal additions
+    associateHistory: ref([]),
+    associateHistoryTotalCount: ref(0),
+    associateHistoryLoading: ref(false),
+    associateHistoryError: ref(null),
+    associateCreating: ref(false),
+    associateCreateError: ref(null),
+    fetchAssociateHistory: vi.fn(),
+    createAssociateForUser: vi.fn(),
     ...overrides
   }
   useUserManage.mockReturnValue(state)
@@ -467,5 +476,234 @@ describe('UserDetail.vue - User Information edit mode', () => {
 
     expect(saveBtn).toBeTruthy()
     expect(saveBtn.attributes('disabled')).not.toBeUndefined()
+  })
+})
+
+// --- associate-renewal feature ---------------------------------------------
+
+describe('UserDetail.vue - associate-status indicator and "Associate for <year>" action', () => {
+  const currentYear = new Date().getFullYear()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('fetches the associate history once on mount with { limit: 100 }, alongside fetchUser/fetchUserRelations', () => {
+    const { state } = mountUserDetail({ user: ref(fullUser) })
+
+    expect(state.fetchAssociateHistory).toHaveBeenCalledWith('1', { limit: 100 })
+  })
+
+  it('defaults the editable year to the current calendar year', () => {
+    const { wrapper } = mountUserDetail({ user: ref(fullUser) })
+
+    const yearInput = wrapper.find('input[type="number"]')
+    expect(yearInput.exists()).toBe(true)
+    expect(Number(yearInput.element.value)).toBe(currentYear)
+  })
+
+  it('shows "Associated for <year>: No" when no history entry matches the selected year', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([{ id: 1, validityYearStart: currentYear - 1, validityYearEnd: currentYear, annualFeePaid: true }])
+    })
+
+    expect(wrapper.text()).toMatch(new RegExp(`Associated for ${currentYear}:\\s*No`, 'i'))
+  })
+
+  it('shows "Associated for <year>: Yes" and disables the CTA when a history entry matches the selected year', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([{ id: 1, validityYearStart: currentYear, validityYearEnd: currentYear + 1, annualFeePaid: false }])
+    })
+
+    expect(wrapper.text()).toMatch(new RegExp(`Associated for ${currentYear}:\\s*Yes`, 'i'))
+
+    const cta = wrapper.findAll('button').find((b) => new RegExp(`associate for ${currentYear}`, 'i').test(b.text()))
+    expect(cta, 'expected an "Associate for <year>" button').toBeTruthy()
+    expect(cta.attributes('disabled')).not.toBeUndefined()
+  })
+
+  it('enables the CTA for a year with no existing associate', () => {
+    const { wrapper } = mountUserDetail({ user: ref(fullUser), associateHistory: ref([]) })
+
+    const cta = wrapper.findAll('button').find((b) => new RegExp(`associate for ${currentYear}`, 'i').test(b.text()))
+    expect(cta).toBeTruthy()
+    expect(cta.attributes('disabled')).toBeUndefined()
+  })
+
+  it('re-derives the Yes/No indicator and the CTA\'s disabled state instantly when the year is edited, without an extra fetch', async () => {
+    const { wrapper, state } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([{ id: 1, validityYearStart: currentYear + 1, validityYearEnd: currentYear + 2, annualFeePaid: false }])
+    })
+
+    expect(wrapper.text()).toMatch(new RegExp(`Associated for ${currentYear}:\\s*No`, 'i'))
+
+    const yearInput = wrapper.find('input[type="number"]')
+    await yearInput.setValue(currentYear + 1)
+
+    expect(wrapper.text()).toMatch(new RegExp(`Associated for ${currentYear + 1}:\\s*Yes`, 'i'))
+    // Still only the one on-mount fetch -- no extra network round-trip per year edit.
+    expect(state.fetchAssociateHistory).toHaveBeenCalledTimes(1)
+  })
+
+  it('calls createAssociateForUser with the route userId and the selected year when the CTA is clicked', async () => {
+    const createAssociateForUser = vi.fn().mockResolvedValue({ id: 99, validityYearStart: currentYear, validityYearEnd: currentYear + 1, annualFeePaid: false })
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      createAssociateForUser
+    })
+
+    const cta = wrapper.findAll('button').find((b) => new RegExp(`associate for ${currentYear}`, 'i').test(b.text()))
+    await cta.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(createAssociateForUser).toHaveBeenCalledWith('1', currentYear)
+  })
+
+  it('shows a dismissible success state (no auto-navigation) after a successful call, with an explicit "go to manage" choice', async () => {
+    const createAssociateForUser = vi.fn().mockResolvedValue({ id: 99, validityYearStart: currentYear, validityYearEnd: currentYear + 1, annualFeePaid: false })
+    const { wrapper, pushMock } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      createAssociateForUser
+    })
+
+    const cta = wrapper.findAll('button').find((b) => new RegExp(`associate for ${currentYear}`, 'i').test(b.text()))
+    await cta.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    // No automatic redirect to the manage page.
+    expect(pushMock).not.toHaveBeenCalledWith(expect.stringContaining('/manage'))
+
+    const manageBtn = wrapper.findAll('button').find((b) => /go to manage/i.test(b.text()))
+    const dismissBtn = wrapper.findAll('button').find((b) => /dismiss/i.test(b.text()))
+    expect(manageBtn, 'expected a "Go to manage" button in the success state').toBeTruthy()
+    expect(dismissBtn, 'expected a dismiss option in the success state').toBeTruthy()
+
+    await manageBtn.trigger('click')
+    expect(pushMock).toHaveBeenCalledWith('/associates/99/manage')
+  })
+
+  it('dismissing the success state clears it without navigating', async () => {
+    const createAssociateForUser = vi.fn().mockResolvedValue({ id: 99, validityYearStart: currentYear, validityYearEnd: currentYear + 1, annualFeePaid: false })
+    const { wrapper, pushMock } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      createAssociateForUser
+    })
+
+    const cta = wrapper.findAll('button').find((b) => new RegExp(`associate for ${currentYear}`, 'i').test(b.text()))
+    await cta.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const dismissBtn = wrapper.findAll('button').find((b) => /dismiss/i.test(b.text()))
+    await dismissBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAll('button').find((b) => /go to manage/i.test(b.text()))).toBeFalsy()
+    expect(pushMock).not.toHaveBeenCalled()
+  })
+
+  it('shows a specific on-screen error when the call fails with a 409 (duplicate associate)', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      associateCreateError: ref('An associate already exists for this year')
+    })
+
+    expect(wrapper.text()).toContain('An associate already exists for this year')
+  })
+
+  it('shows a specific on-screen error when the call fails with the 400 minor-without-relation case', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      associateCreateError: ref('User is a minor with no adult relation on file.')
+    })
+
+    expect(wrapper.text()).toContain('User is a minor with no adult relation on file.')
+  })
+
+  it('shows the on-screen error with no reference code or reporting affordance (no frontend error-reporting call for this feature)', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      associateCreateError: ref('An associate already exists for this year')
+    })
+
+    expect(wrapper.text()).not.toMatch(/reference\s*(code|id|#)?[:\-]/i)
+  })
+
+  it('never renders a discount, relation or course field anywhere in the "Associate for <year>" flow', () => {
+    const { wrapper } = mountUserDetail({ user: ref(fullUser), associateHistory: ref([]) })
+
+    expect(wrapper.text().toLowerCase()).not.toContain('discount')
+    expect(wrapper.find('select[id*="course" i]').exists()).toBe(false)
+  })
+
+  it('shows a loading indication for the associate-history fetch independent of the user/relations loading states', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      loading: ref(false),
+      relationsLoading: ref(false),
+      associateHistoryLoading: ref(true)
+    })
+
+    expect(wrapper.text().toLowerCase()).toContain('loading')
+  })
+
+  it('surfaces an error (not a silent empty history) when the associate-history fetch itself fails, rather than showing a misleading "No" indicator', () => {
+    const { wrapper } = mountUserDetail({
+      user: ref(fullUser),
+      associateHistory: ref([]),
+      associateHistoryLoading: ref(false),
+      associateHistoryError: ref('Failed to fetch associate history')
+    })
+
+    expect(wrapper.text()).toContain('Failed to fetch associate history')
+  })
+})
+
+describe('UserDetail.vue - View Association History modal', () => {
+  const sampleHistory = [
+    { id: 1, validityYearStart: 2025, validityYearEnd: 2026, annualFeePaid: true },
+    { id: 2, validityYearStart: 2026, validityYearEnd: 2027, annualFeePaid: false }
+  ]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('renders a "View Association History" button', () => {
+    const { wrapper } = mountUserDetail({ user: ref(fullUser), associateHistory: ref(sampleHistory) })
+
+    const historyBtn = wrapper.findAll('button').find((b) => /view association history/i.test(b.text()))
+    expect(historyBtn).toBeTruthy()
+  })
+
+  it('opening the modal triggers no new fetch -- it is fed from the already-loaded associateHistory', async () => {
+    const { wrapper, state } = mountUserDetail({ user: ref(fullUser), associateHistory: ref(sampleHistory) })
+
+    const callsBeforeOpen = state.fetchAssociateHistory.mock.calls.length
+
+    const historyBtn = wrapper.findAll('button').find((b) => /view association history/i.test(b.text()))
+    await historyBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(state.fetchAssociateHistory.mock.calls.length).toBe(callsBeforeOpen)
+  })
+
+  it('shows the history entries\' year ranges and fee-paid flags once opened', async () => {
+    const { wrapper } = mountUserDetail({ user: ref(fullUser), associateHistory: ref(sampleHistory) })
+
+    const historyBtn = wrapper.findAll('button').find((b) => /view association history/i.test(b.text()))
+    await historyBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('2025/2026')
+    expect(wrapper.text()).toContain('2026/2027')
   })
 })

@@ -111,7 +111,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, toRef } from 'vue'
+import { usePagination } from '../composables/usePagination.js'
 
 // Props
 const props = defineProps({
@@ -144,25 +145,23 @@ const filters = ref({
   bloomId: ''
 })
 
-const currentPage = ref(props.currentPage)
+const {
+  currentPage,
+  totalPages,
+  hasNextPage,
+  hasPreviousPage,
+  goToNextPage: paginationGoToNextPage,
+  goToPreviousPage: paginationGoToPreviousPage
+} = usePagination({
+  totalCount: toRef(props, 'totalCount'),
+  itemsPerPage: toRef(props, 'itemsPerPage'),
+  currentPage: props.currentPage
+})
 
 // Watch for currentPage prop changes and update local state
 watch(() => props.currentPage, (newPage) => {
   currentPage.value = newPage
 }, { immediate: true })
-
-// Computed properties
-const totalPages = computed(() => {
-  return Math.ceil(props.totalCount / props.itemsPerPage)
-})
-
-const hasNextPage = computed(() => {
-  return currentPage.value < totalPages.value
-})
-
-const hasPreviousPage = computed(() => {
-  return currentPage.value > 1
-})
 
 // Methods
 const applyFilters = () => {
@@ -195,17 +194,11 @@ const viewUser = (user) => {
 }
 
 const goToNextPage = () => {
-  if (hasNextPage.value) {
-    currentPage.value++
-    emit('page-change', currentPage.value)
-  }
+  paginationGoToNextPage((page) => emit('page-change', page))
 }
 
 const goToPreviousPage = () => {
-  if (hasPreviousPage.value) {
-    currentPage.value--
-    emit('page-change', currentPage.value)
-  }
+  paginationGoToPreviousPage((page) => emit('page-change', page))
 }
 </script>
 

@@ -1,8 +1,8 @@
 <template>
-  <div class="create-associate-page">
+  <div class="add-user-page">
     <div class="page-header">
-      <button @click="goBack" class="back-btn">← Back to Associates</button>
-      <h1>Create Associate</h1>
+      <button @click="goBack" class="back-btn">← Back to Users</button>
+      <h1>Add User</h1>
     </div>
 
     <div v-if="error" class="error-container">
@@ -10,129 +10,101 @@
       <button @click="clearError" class="error-dismiss">Dismiss</button>
     </div>
 
-    <form @submit.prevent="submitAssociate" class="associate-form">
+    <div v-if="alreadyExistsMessage" class="info-banner">
+      <p>{{ alreadyExistsMessage }}</p>
+    </div>
+
+    <form @submit.prevent="submitUser" class="user-form">
       <section class="form-section">
-        <h2>Validity Year</h2>
+        <h2>User Data</h2>
         <div class="form-row two-columns">
           <div class="form-group">
-            <label for="validityYearStart">Start Year *</label>
-            <input
-              id="validityYearStart"
-              v-model.number="validityYearStart"
-              type="number"
-              min="1900"
-              max="3000"
-              :class="['form-input', { 'input-error': hasTriedSubmit && !isYearRangeValid }]"
-              required
-            />
-            <p v-if="hasTriedSubmit && !isYearRangeValid" class="field-error">Start/End year must differ by exactly 1.</p>
-          </div>
-
-          <div class="form-group">
-            <label for="validityYearEnd">End Year *</label>
-            <input
-              id="validityYearEnd"
-              :value="validityYearEnd"
-              type="number"
-              :class="['form-input', { 'input-error': hasTriedSubmit && !isYearRangeValid }]"
-              readonly
-            />
-            <p v-if="hasTriedSubmit && !isYearRangeValid" class="field-error">End year is automatically set to start year + 1.</p>
-          </div>
-        </div>
-        <p class="field-help">End year is automatically set to start year + 1.</p>
-      </section>
-
-      <section class="form-section">
-        <h2>Associate Data</h2>
-        <div class="form-row two-columns">
-          <div class="form-group">
-            <label for="associateName">Name *</label>
-            <input id="associateName" v-model.trim="associate.name" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.name) }]" required />
-            <p v-if="showRequiredError(associate.name)" class="field-error">Name is required.</p>
+            <label for="userName">Name *</label>
+            <input id="userName" v-model.trim="identity.name" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.name) }]" required />
+            <p v-if="showRequiredError(identity.name)" class="field-error">Name is required.</p>
           </div>
           <div class="form-group">
-            <label for="associateLastName">Last Name *</label>
-            <input id="associateLastName" v-model.trim="associate.lastName" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.lastName) }]" required />
-            <p v-if="showRequiredError(associate.lastName)" class="field-error">Last name is required.</p>
+            <label for="userLastName">Last Name *</label>
+            <input id="userLastName" v-model.trim="identity.lastName" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.lastName) }]" required />
+            <p v-if="showRequiredError(identity.lastName)" class="field-error">Last name is required.</p>
           </div>
         </div>
 
         <div class="form-row two-columns">
           <div class="form-group">
-            <label for="associateBirthDate">Birth Date *</label>
-            <input id="associateBirthDate" v-model="associate.birthDate" type="date" :class="['form-input', { 'input-error': showRequiredError(associate.birthDate) || showInvalidAgeError }]" required />
-            <p v-if="showRequiredError(associate.birthDate)" class="field-error">Birth date is required.</p>
+            <label for="userBirthDate">Birth Date *</label>
+            <input id="userBirthDate" v-model="identity.birthDate" type="date" :class="['form-input', { 'input-error': showRequiredError(identity.birthDate) || showInvalidAgeError }]" required />
+            <p v-if="showRequiredError(identity.birthDate)" class="field-error">Birth date is required.</p>
             <p v-else-if="showInvalidAgeError" class="field-error">Birth date is not valid.</p>
           </div>
           <div class="form-group">
-            <label for="associateBirthCity">Birth City *</label>
-            <input id="associateBirthCity" v-model.trim="associate.birthCity" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.birthCity) }]" required />
-            <p v-if="showRequiredError(associate.birthCity)" class="field-error">Birth city is required.</p>
+            <label for="userBirthCity">Birth City *</label>
+            <input id="userBirthCity" v-model.trim="identity.birthCity" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.birthCity) }]" required />
+            <p v-if="showRequiredError(identity.birthCity)" class="field-error">Birth city is required.</p>
           </div>
         </div>
 
         <div class="form-row two-columns">
           <div class="form-group">
-            <label for="associateFiscalCode">Fiscal Code *</label>
-            <input id="associateFiscalCode" v-model.trim="associate.fiscalCode" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.fiscalCode) }]" required />
-            <p v-if="showRequiredError(associate.fiscalCode)" class="field-error">Fiscal code is required.</p>
+            <label for="userFiscalCode">Fiscal Code *</label>
+            <input id="userFiscalCode" v-model.trim="identity.fiscalCode" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.fiscalCode) }]" required />
+            <p v-if="showRequiredError(identity.fiscalCode)" class="field-error">Fiscal code is required.</p>
           </div>
           <div class="form-group">
-            <label for="associateIdentityCardNumber">
+            <label for="userIdentityCardNumber">
               Identity Card Number {{ isAdult ? '*' : '(optional)' }}
             </label>
             <input
-              id="associateIdentityCardNumber"
-              v-model.trim="associate.identityCardNumber"
+              id="userIdentityCardNumber"
+              v-model.trim="identity.identityCardNumber"
               type="text"
-              :class="['form-input', { 'input-error': isAdult && showRequiredError(associate.identityCardNumber) }]"
+              :class="['form-input', { 'input-error': isAdult && showRequiredError(identity.identityCardNumber) }]"
               :required="isAdult"
             />
-            <p v-if="isAdult && showRequiredError(associate.identityCardNumber)" class="field-error">Identity card number is required for adults.</p>
+            <p v-if="isAdult && showRequiredError(identity.identityCardNumber)" class="field-error">Identity card number is required for adults.</p>
           </div>
         </div>
 
         <div class="form-row two-columns">
           <div class="form-group">
-            <label for="associateResidenceAddress">Residence Address *</label>
-            <input id="associateResidenceAddress" v-model.trim="associate.residenceAddress" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.residenceAddress) }]" required />
-            <p v-if="showRequiredError(associate.residenceAddress)" class="field-error">Residence address is required.</p>
+            <label for="userResidenceAddress">Residence Address *</label>
+            <input id="userResidenceAddress" v-model.trim="identity.residenceAddress" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.residenceAddress) }]" required />
+            <p v-if="showRequiredError(identity.residenceAddress)" class="field-error">Residence address is required.</p>
           </div>
           <div class="form-group">
-            <label for="associateResidenceCity">Residence City *</label>
-            <input id="associateResidenceCity" v-model.trim="associate.residenceCity" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.residenceCity) }]" required />
-            <p v-if="showRequiredError(associate.residenceCity)" class="field-error">Residence city is required.</p>
+            <label for="userResidenceCity">Residence City *</label>
+            <input id="userResidenceCity" v-model.trim="identity.residenceCity" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.residenceCity) }]" required />
+            <p v-if="showRequiredError(identity.residenceCity)" class="field-error">Residence city is required.</p>
           </div>
         </div>
 
         <div class="form-row three-columns">
           <div class="form-group">
-            <label for="associateResidenceCAP">Residence CAP *</label>
-            <input id="associateResidenceCAP" v-model.trim="associate.residenceCAP" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.residenceCAP) }]" required />
-            <p v-if="showRequiredError(associate.residenceCAP)" class="field-error">Residence CAP is required.</p>
+            <label for="userResidenceCAP">Residence CAP *</label>
+            <input id="userResidenceCAP" v-model.trim="identity.residenceCAP" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.residenceCAP) }]" required />
+            <p v-if="showRequiredError(identity.residenceCAP)" class="field-error">Residence CAP is required.</p>
           </div>
           <div class="form-group">
-            <label for="associateResidenceProvince">Residence Province *</label>
-            <input id="associateResidenceProvince" v-model.trim="associate.residenceProvince" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.residenceProvince) }]" required />
-            <p v-if="showRequiredError(associate.residenceProvince)" class="field-error">Residence province is required.</p>
+            <label for="userResidenceProvince">Residence Province *</label>
+            <input id="userResidenceProvince" v-model.trim="identity.residenceProvince" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.residenceProvince) }]" required />
+            <p v-if="showRequiredError(identity.residenceProvince)" class="field-error">Residence province is required.</p>
           </div>
           <div class="form-group">
-            <label for="associatePhoneNumber">Phone Number *</label>
-            <input id="associatePhoneNumber" v-model.trim="associate.phoneNumber" type="text" :class="['form-input', { 'input-error': showRequiredError(associate.phoneNumber) }]" required />
-            <p v-if="showRequiredError(associate.phoneNumber)" class="field-error">Phone number is required.</p>
+            <label for="userPhoneNumber">Phone Number *</label>
+            <input id="userPhoneNumber" v-model.trim="identity.phoneNumber" type="text" :class="['form-input', { 'input-error': showRequiredError(identity.phoneNumber) }]" required />
+            <p v-if="showRequiredError(identity.phoneNumber)" class="field-error">Phone number is required.</p>
           </div>
         </div>
 
         <div class="form-row two-columns">
           <div class="form-group">
-            <label for="associateEmail">Email *</label>
-            <input id="associateEmail" v-model.trim="associate.email" type="email" :class="['form-input', { 'input-error': showRequiredError(associate.email) }]" required />
-            <p v-if="showRequiredError(associate.email)" class="field-error">Email is required.</p>
+            <label for="userEmail">Email *</label>
+            <input id="userEmail" v-model.trim="identity.email" type="email" :class="['form-input', { 'input-error': showRequiredError(identity.email) }]" required />
+            <p v-if="showRequiredError(identity.email)" class="field-error">Email is required.</p>
           </div>
           <div class="form-group">
-            <label for="associateSecondaryEmail">Secondary Email (optional)</label>
-            <input id="associateSecondaryEmail" v-model.trim="associate.secondaryEmail" type="email" class="form-input" />
+            <label for="userSecondaryEmail">Secondary Email (optional)</label>
+            <input id="userSecondaryEmail" v-model.trim="identity.secondaryEmail" type="email" class="form-input" />
           </div>
         </div>
       </section>
@@ -226,8 +198,8 @@
 
       <div class="form-actions">
         <button type="button" class="cancel-btn" @click="goBack">Cancel</button>
-        <button type="submit" class="submit-btn" :disabled="submitting">
-          {{ submitting ? 'Creating...' : 'Create Associate' }}
+        <button type="submit" class="submit-btn" :disabled="creating">
+          {{ creating ? 'Creating...' : 'Create User' }}
         </button>
       </div>
     </form>
@@ -237,17 +209,16 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { associatesService } from '../services/associatesService.js'
+import { useUserManage } from '../composables/useUserManage.js'
 
 const router = useRouter()
 
-const currentYear = new Date().getFullYear()
-const validityYearStart = ref(currentYear)
-const submitting = ref(false)
-const error = ref(null)
-const hasTriedSubmit = ref(false)
+const { creating, createError, createUser } = useUserManage()
 
-const associate = reactive({
+const hasTriedSubmit = ref(false)
+const alreadyExistsMessage = ref('')
+
+const identity = reactive({
   name: '',
   lastName: '',
   birthDate: '',
@@ -279,8 +250,6 @@ const parent = reactive({
   secondaryEmail: ''
 })
 
-const validityYearEnd = computed(() => Number(validityYearStart.value || 0) + 1)
-
 const calculateAge = (birthDate) => {
   if (!birthDate) {
     return null
@@ -303,10 +272,10 @@ const calculateAge = (birthDate) => {
   return age
 }
 
-const associateAge = computed(() => calculateAge(associate.birthDate))
-const isMinor = computed(() => associateAge.value !== null && associateAge.value < 18)
-const isAdult = computed(() => associateAge.value !== null && associateAge.value >= 18)
-const showInvalidAgeError = computed(() => hasTriedSubmit.value && associate.birthDate && (associateAge.value === null || associateAge.value < 0))
+const identityAge = computed(() => calculateAge(identity.birthDate))
+const isMinor = computed(() => identityAge.value !== null && identityAge.value < 18)
+const isAdult = computed(() => identityAge.value !== null && identityAge.value >= 18)
+const showInvalidAgeError = computed(() => hasTriedSubmit.value && identity.birthDate && (identityAge.value === null || identityAge.value < 0))
 
 const showRequiredError = (value) => {
   return hasTriedSubmit.value && String(value || '').trim() === ''
@@ -316,7 +285,7 @@ const requiredFieldsFilled = (obj, keys) => {
   return keys.every((key) => String(obj[key] || '').trim() !== '')
 }
 
-const associateRequiredFields = computed(() => {
+const identityRequiredFields = computed(() => {
   const baseFields = [
     'name',
     'lastName',
@@ -335,7 +304,7 @@ const associateRequiredFields = computed(() => {
     baseFields.push('identityCardNumber')
   }
 
-  return requiredFieldsFilled(associate, baseFields)
+  return requiredFieldsFilled(identity, baseFields)
 })
 
 const parentRequiredFields = computed(() => {
@@ -357,18 +326,12 @@ const parentRequiredFields = computed(() => {
   return requiredFieldsFilled(parent, keys)
 })
 
-const isYearRangeValid = computed(() => {
-  const start = Number(validityYearStart.value)
-  const end = Number(validityYearEnd.value)
-  return Number.isInteger(start) && Number.isInteger(end) && end - start === 1
-})
-
 const isFormValid = computed(() => {
-  if (!associateRequiredFields.value) {
+  if (!identityRequiredFields.value) {
     return false
   }
 
-  if (associateAge.value === null || associateAge.value < 0) {
+  if (identityAge.value === null || identityAge.value < 0) {
     return false
   }
 
@@ -387,25 +350,21 @@ const buildPayload = () => {
   }
 
   const payload = {
-    validityYearStart: String(validityYearStart.value),
-    validityYearEnd: String(validityYearEnd.value),
-    associate: {
-      name: associate.name,
-      lastName: associate.lastName,
-      birthDate: associate.birthDate,
-      birthCity: associate.birthCity,
-      fiscalCode: associate.fiscalCode,
-      residenceAddress: associate.residenceAddress,
-      residenceCAP: associate.residenceCAP,
-      residenceCity: associate.residenceCity,
-      residenceProvince: associate.residenceProvince,
-      phoneNumber: associate.phoneNumber,
-      email: associate.email
-    }
+    name: identity.name,
+    lastName: identity.lastName,
+    birthDate: identity.birthDate,
+    birthCity: identity.birthCity,
+    fiscalCode: identity.fiscalCode,
+    residenceAddress: identity.residenceAddress,
+    residenceCAP: identity.residenceCAP,
+    residenceCity: identity.residenceCity,
+    residenceProvince: identity.residenceProvince,
+    phoneNumber: identity.phoneNumber,
+    email: identity.email
   }
 
-  withOptional(payload.associate, 'identityCardNumber', associate.identityCardNumber)
-  withOptional(payload.associate, 'secondaryEmail', associate.secondaryEmail)
+  withOptional(payload, 'identityCardNumber', identity.identityCardNumber)
+  withOptional(payload, 'secondaryEmail', identity.secondaryEmail)
 
   if (isMinor.value) {
     const parentUser = {
@@ -437,44 +396,67 @@ const buildPayload = () => {
 }
 
 const clearError = () => {
-  error.value = null
+  createError.value = null
 }
 
 const goBack = () => {
-  router.push('/associates')
+  router.push('/users')
 }
 
-const submitAssociate = async () => {
+const submitUser = async () => {
   hasTriedSubmit.value = true
-  clearError()
-
-  if (!isYearRangeValid.value) {
-    error.value = 'Validity years are invalid: end year must be exactly start year + 1.'
-    return
-  }
+  alreadyExistsMessage.value = ''
 
   if (!isFormValid.value) {
-    error.value = 'Please fill all mandatory fields correctly before submitting.'
     return
   }
 
-  submitting.value = true
+  const payload = buildPayload()
+  const result = await createUser(payload)
 
-  try {
-    const payload = buildPayload()
-    await associatesService.createAssociate(payload)
-    router.push({ path: '/associates', query: { created: '1' } })
-  } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to create associate. Please try again.'
-    console.error('Create associate failed:', err)
-  } finally {
-    submitting.value = false
+  if (!result) {
+    return
   }
+
+  const { user, created } = result
+
+  if (!created) {
+    alreadyExistsMessage.value = 'A user with this fiscal code already exists — no changes were made to their record.'
+  }
+
+  router.push(`/users/${user.id}`)
 }
+
+// Recurses because a relation's nested UserDto/RelationDto errors come back
+// as nested objects/arrays (e.g. { relations: [{ user: { birthDate: [...] } }] }),
+// not just a flat { field: [messages] } shape -- a shallow lookup would render
+// the nested object as "[object Object]" instead of the actual message.
+const firstErrorMessage = (data) => {
+  if (typeof data === 'string') return data
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const message = firstErrorMessage(item)
+      if (message) return message
+    }
+    return null
+  }
+  if (data && typeof data === 'object') {
+    for (const value of Object.values(data)) {
+      const message = firstErrorMessage(value)
+      if (message) return message
+    }
+  }
+  return null
+}
+
+const error = computed(() => {
+  if (!createError.value) return null
+  return firstErrorMessage(createError.value) || 'Failed to create user. Please try again.'
+})
 </script>
 
 <style scoped>
-.create-associate-page {
+.add-user-page {
   max-width: 1100px;
   margin: 0 auto;
   padding: 1.5rem;
@@ -506,7 +488,7 @@ const submitAssociate = async () => {
   background: #e3e9f1;
 }
 
-.associate-form {
+.user-form {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -575,12 +557,6 @@ const submitAssociate = async () => {
   font-size: 0.82rem;
 }
 
-.field-help {
-  margin: 0;
-  color: #586f85;
-  font-size: 0.9rem;
-}
-
 .relation-section {
   border-left: 4px solid #2c6fb0;
 }
@@ -644,6 +620,19 @@ const submitAssociate = async () => {
 .error-dismiss {
   background: #f9dede;
   color: #7f2424;
+}
+
+.info-banner {
+  margin-bottom: 1rem;
+  background: #eef6fb;
+  border: 1px solid #bcdcef;
+  border-radius: 10px;
+  padding: 0.9rem;
+  color: #1f5d8f;
+}
+
+.info-banner p {
+  margin: 0;
 }
 
 @media (max-width: 900px) {
