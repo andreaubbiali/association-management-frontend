@@ -5,13 +5,16 @@ import api from './api.js'
  */
 export const associatesService = {
   /**
-   * Create a new associate
-   * @param {Object} payload - Associate creation payload
-   * @returns {Promise} API response
+   * Create a minimal yearly Associate renewal for an already-registered User.
+   * No identity/relation/discount fields -- just the year.
+   * @param {Object} payload
+   * @param {number} payload.userId - User ID
+   * @param {number} payload.validityYearStart - Validity start year
+   * @returns {Promise} API response: { id, validityYearStart, validityYearEnd, annualFeePaid }
    */
-  async createAssociate(payload) {
+  async createAssociate({ userId, validityYearStart }) {
     try {
-      const response = await api.post('/associate', payload)
+      const response = await api.post('/associate', { userId, validityYearStart })
       return response.data
     } catch (error) {
       console.error('Error creating associate:', error)

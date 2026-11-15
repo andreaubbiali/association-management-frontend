@@ -166,7 +166,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, toRef } from 'vue'
+import { usePagination } from '../composables/usePagination.js'
 
 // Props
 const props = defineProps({
@@ -203,7 +204,19 @@ const filters = ref({
 
 const sortField = ref('')
 const sortDirection = ref('asc')
-const currentPage = ref(props.currentPage)
+
+const {
+  currentPage,
+  totalPages,
+  hasNextPage,
+  hasPreviousPage,
+  goToNextPage: paginationGoToNextPage,
+  goToPreviousPage: paginationGoToPreviousPage
+} = usePagination({
+  totalCount: toRef(props, 'totalCount'),
+  itemsPerPage: toRef(props, 'itemsPerPage'),
+  currentPage: props.currentPage
+})
 
 // Watch for currentPage prop changes and update local state
 watch(() => props.currentPage, (newPage) => {
@@ -213,18 +226,6 @@ watch(() => props.currentPage, (newPage) => {
 // Computed properties
 const availableYears = computed(() => {
   return ["2025/2026", "2026/2027"]
-})
-
-const totalPages = computed(() => {
-  return Math.ceil(props.totalCount / props.itemsPerPage)
-})
-
-const hasNextPage = computed(() => {
-  return currentPage.value < totalPages.value
-})
-
-const hasPreviousPage = computed(() => {
-  return currentPage.value > 1
 })
 
 const paginatedAssociates = computed(() => {
@@ -300,17 +301,11 @@ const isAssociateFullyPaid = (associate) => {
 }
 
 const goToNextPage = () => {
-  if (hasNextPage.value) {
-    currentPage.value++
-    emit('page-change', currentPage.value)
-  }
+  paginationGoToNextPage((page) => emit('page-change', page))
 }
 
 const goToPreviousPage = () => {
-  if (hasPreviousPage.value) {
-    currentPage.value--
-    emit('page-change', currentPage.value)
-  }
+  paginationGoToPreviousPage((page) => emit('page-change', page))
 }
 </script>
 

@@ -154,6 +154,57 @@
       </div>
     </div>
 
+    <!-- Associate-status block -->
+    <div v-if="!loading && !error && user" class="associate-status-card">
+      <h2>Association Status</h2>
+
+      <div v-if="associateSuccess" class="success-banner">
+        <p>Associate created for {{ associateSuccess.validityYearStart }}/{{ associateSuccess.validityYearEnd }}.</p>
+        <div class="success-actions">
+          <button @click="goToManage" class="go-to-manage-btn">Go to manage courses &amp; payment</button>
+          <button @click="dismissAssociateSuccess" class="dismiss-success-btn">Dismiss</button>
+        </div>
+      </div>
+
+      <div v-if="associateCreateError" class="error-container">
+        <p class="error-message">{{ associateCreateError }}</p>
+      </div>
+
+      <!-- Associate-history Loading State -->
+      <div v-if="associateHistoryLoading" class="loading-container">
+        <p>Loading association status...</p>
+      </div>
+
+      <!-- Associate-history Error State -->
+      <div v-if="associateHistoryError" class="error-container">
+        <p class="error-message">{{ associateHistoryError }}</p>
+        <button @click="retryFetchAssociateHistory" class="retry-button">Retry</button>
+      </div>
+
+      <div v-if="!associateHistoryLoading && !associateHistoryError" class="associate-status-row">
+        <label for="selectedYear">Year:</label>
+        <input id="selectedYear" v-model.number="selectedYear" type="number" class="year-input" />
+        <span class="associate-indicator">
+          Associated for {{ selectedYear }}: {{ isAssociatedForSelectedYear ? 'Yes' : 'No' }}
+        </span>
+        <button
+          @click="handleCreateAssociate"
+          :disabled="isAssociatedForSelectedYear || associateCreating"
+          class="associate-cta"
+        >
+          {{ associateCreating ? 'Creating...' : `Associate for ${selectedYear}` }}
+        </button>
+        <button @click="showHistoryModal = true" class="history-btn">View Association History</button>
+      </div>
+    </div>
+
+    <AssociationHistoryModal
+      :visible="showHistoryModal"
+      :history="associateHistory"
+      :items-per-page="10"
+      @close="showHistoryModal = false"
+    />
+
     <!-- Relations Section -->
     <div class="relations-card">
       <h2>Relations</h2>
@@ -201,9 +252,10 @@
 </template>
 
 <script setup>
-import { onMounted, ref, reactive } from 'vue'
+import { computed, onMounted, ref, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserManage } from '../composables/useUserManage.js'
+import AssociationHistoryModal from '../components/AssociationHistoryModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -241,16 +293,32 @@ const {
   updateUser,
   clearError,
   clearRelationsError,
-  clearUpdateError
+  clearUpdateError,
+  associateHistory,
+  associateHistoryLoading,
+  associateHistoryError,
+  associateCreating,
+  associateCreateError,
+  fetchAssociateHistory,
+  createAssociateForUser
 } = useUserManage()
 
 const isEditing = ref(false)
 const editForm = reactive({})
 
+const selectedYear = ref(new Date().getFullYear())
+const associateSuccess = ref(null)
+const showHistoryModal = ref(false)
+
+const isAssociatedForSelectedYear = computed(() => {
+  return associateHistory.value.some((a) => a.validityYearStart === selectedYear.value)
+})
+
 onMounted(async () => {
   await Promise.all([
     fetchUser(userId),
-    fetchUserRelations(userId)
+    fetchUserRelations(userId),
+    fetchAssociateHistory(userId, { limit: 100 })
   ])
 })
 
@@ -277,12 +345,32 @@ const saveEdit = async () => {
   }
 }
 
+const handleCreateAssociate = async () => {
+  associateSuccess.value = null
+  const created = await createAssociateForUser(userId, selectedYear.value)
+  if (created) {
+    associateSuccess.value = created
+  }
+}
+
+const dismissAssociateSuccess = () => {
+  associateSuccess.value = null
+}
+
+const goToManage = () => {
+  router.push(`/associates/${associateSuccess.value.id}/manage`)
+}
+
 const retryFetchUser = () => {
   fetchUser(userId)
 }
 
 const retryFetchUserRelations = () => {
   fetchUserRelations(userId)
+}
+
+const retryFetchAssociateHistory = () => {
+  fetchAssociateHistory(userId, { limit: 100 })
 }
 
 const formatDate = (dateString) => {
@@ -506,6 +594,106 @@ const formatDate = (dateString) => {
 
 .flag-false {
   color: #dc3545;
+}
+
+.associate-status-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.associate-status-card h2 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 0.5rem;
+}
+
+.associate-status-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.year-input {
+  width: 100px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.associate-indicator {
+  font-weight: 600;
+  color: #333;
+}
+
+.associate-cta,
+.history-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: white;
+}
+
+.associate-cta {
+  background: #007bff;
+}
+
+.associate-cta:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.history-btn {
+  background: #6c757d;
+}
+
+.success-banner {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #e7f7ec;
+  border: 1px solid #b6e8c5;
+  color: #176a3a;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.success-banner p {
+  margin: 0;
+}
+
+.success-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.go-to-manage-btn,
+.dismiss-success-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.go-to-manage-btn {
+  background: #0f7a3a;
+  color: white;
+}
+
+.dismiss-success-btn {
+  background: #d0f0dc;
+  color: #0f5a30;
 }
 
 .empty-state {

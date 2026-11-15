@@ -11,6 +11,15 @@ vi.mock('./api.js', () => ({
   }
 }))
 
+function paramsFromCall(call) {
+  const [url, config] = call
+  // Accept either a manually-built query string or an axios `params` config object.
+  if (config?.params) {
+    return new URLSearchParams(config.params)
+  }
+  return new URLSearchParams((url.split('?')[1]) || '')
+}
+
 describe('usersService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -173,6 +182,83 @@ describe('usersService', () => {
       api.get.mockRejectedValue(apiError)
 
       await expect(usersService.getUserRelations(1)).rejects.toThrow('Server error')
+    })
+  })
+
+  describe('createUser', () => {
+    it('calls POST /user with the given payload', async () => {
+      const payload = { name: 'Mario', lastName: 'Rossi', fiscalCode: 'RSSMRA80A01H501Z' }
+      api.post.mockResolvedValue({ data: { id: 1, ...payload }, status: 201 })
+
+      await usersService.createUser(payload)
+
+      expect(api.post).toHaveBeenCalledWith('/user', payload)
+    })
+
+    it('resolves with { data, status } (not just data), the only service method whose caller needs the status code', async () => {
+      const payload = { id: 1, name: 'Mario' }
+      api.post.mockResolvedValue({ data: payload, status: 201 })
+
+      const result = await usersService.createUser({ name: 'Mario' })
+
+      expect(result).toEqual({ data: payload, status: 201 })
+    })
+
+    it('surfaces a 200 status when the fiscalCode already matched an existing user (no record created)', async () => {
+      const existingUser = { id: 7, name: 'Already', fiscalCode: 'XXX' }
+      api.post.mockResolvedValue({ data: existingUser, status: 200 })
+
+      const result = await usersService.createUser({ fiscalCode: 'XXX' })
+
+      expect(result).toEqual({ data: existingUser, status: 200 })
+    })
+
+    it('rethrows the error when the request fails (e.g. the 400 minor-without-relation case)', async () => {
+      const apiError = {
+        response: { status: 400, data: { non_field_errors: ['A user under 18 requires at least one adult relation.'] } }
+      }
+      api.post.mockRejectedValue(apiError)
+
+      await expect(usersService.createUser({ name: 'Mario', birthDate: '2015-01-01' })).rejects.toEqual(apiError)
+    })
+  })
+
+  describe('getAssociateHistory', () => {
+    it('calls GET /user/:id/associates with page and limit', async () => {
+      api.get.mockResolvedValue({ data: { count: 0, results: [] } })
+
+      await usersService.getAssociateHistory(1, { page: 2, limit: 100 })
+
+      expect(api.get).toHaveBeenCalledTimes(1)
+      const [url] = api.get.mock.calls[0]
+      expect(url.startsWith('/user/1/associates')).toBe(true)
+
+      const params = paramsFromCall(api.get.mock.calls[0])
+      expect(params.get('page')).toBe('2')
+      expect(params.get('limit')).toBe('100')
+    })
+
+    it('returns the DRF pagination envelope (count/next/previous/results) on success', async () => {
+      const payload = {
+        count: 2,
+        next: null,
+        previous: null,
+        results: [
+          { id: 1, validityYearStart: 2025, validityYearEnd: 2026, annualFeePaid: true }
+        ]
+      }
+      api.get.mockResolvedValue({ data: payload })
+
+      const result = await usersService.getAssociateHistory(1, { limit: 100 })
+
+      expect(result).toEqual(payload)
+    })
+
+    it('rethrows the error when the request fails', async () => {
+      const apiError = new Error('Server error')
+      api.get.mockRejectedValue(apiError)
+
+      await expect(usersService.getAssociateHistory(1, { limit: 100 })).rejects.toThrow('Server error')
     })
   })
 })

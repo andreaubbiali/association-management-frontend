@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { usersService } from '../services/usersService.js'
+import { associatesService } from '../services/associatesService.js'
 
 /**
  * Runs an async fetch against the given loading/error/data refs, following
@@ -40,6 +41,20 @@ export function useUserManage() {
   // Update (mutation) state
   const updating = ref(false)
   const updateError = ref(null)
+
+  // Create-user (Add User flow) state
+  const creating = ref(false)
+  const createError = ref(null)
+
+  // Create-associate ("Associate for <year>" action) state
+  const associateCreating = ref(false)
+  const associateCreateError = ref(null)
+
+  // Associate history state
+  const associateHistory = ref([])
+  const associateHistoryTotalCount = ref(0)
+  const associateHistoryLoading = ref(false)
+  const associateHistoryError = ref(null)
 
   /**
    * Fetch a single user by ID
@@ -94,6 +109,78 @@ export function useUserManage() {
   }
 
   /**
+   * Create a standalone User (identity data only, optional relations array
+   * for minors), used by the "Add User" page. Does not mutate the
+   * user/relations state used by fetchUser/fetchUserRelations -- this
+   * composable instance is a fresh instance per page visit.
+   * @param {Object} payload - 13 identity fields + optional relations array
+   * @returns {Promise<{user: Object, created: boolean}|null>} null on failure
+   */
+  const createUser = async (payload) => {
+    creating.value = true
+    createError.value = null
+    try {
+      const { data, status } = await usersService.createUser(payload)
+      return { user: data, created: status === 201 }
+    } catch (err) {
+      console.error('useUserManage: createUser failed:', err)
+      createError.value = err.response?.data || { non_field_errors: [err.message || 'Failed to create user'] }
+      return null
+    } finally {
+      creating.value = false
+    }
+  }
+
+  /**
+   * Create a minimal yearly Associate renewal for an already-registered User.
+   * On success, prepends the new row to associateHistory so the indicator
+   * and the History modal reflect it immediately without a refetch.
+   * @param {number|string} userId - User ID
+   * @param {number} validityYearStart - Validity start year
+   * @returns {Promise<Object|null>} the created associate row, or null on failure
+   */
+  const createAssociateForUser = async (userId, validityYearStart) => {
+    associateCreating.value = true
+    associateCreateError.value = null
+    try {
+      const created = await associatesService.createAssociate({ userId, validityYearStart })
+      associateHistory.value = [created, ...associateHistory.value]
+      return created
+    } catch (err) {
+      console.error('useUserManage: createAssociateForUser failed:', err)
+      if (err.response?.status === 409) {
+        associateCreateError.value = err.response?.data?.error || 'An associate already exists for this year'
+      } else {
+        associateCreateError.value = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to create associate'
+      }
+      return null
+    } finally {
+      associateCreating.value = false
+    }
+  }
+
+  /**
+   * Fetch a user's paginated association (Associate) history.
+   * @param {number|string} userId - User ID
+   * @param {Object} params - { page, limit }
+   */
+  const fetchAssociateHistory = async (userId, { page, limit } = {}) => {
+    associateHistoryLoading.value = true
+    associateHistoryError.value = null
+    try {
+      const envelope = await usersService.getAssociateHistory(userId, { page, limit })
+      associateHistory.value = envelope.results || []
+      associateHistoryTotalCount.value = envelope.count || 0
+    } catch (err) {
+      console.error('useUserManage: fetchAssociateHistory failed:', err)
+      associateHistoryError.value = err.response?.data?.message || err.message || 'Failed to fetch associate history'
+      associateHistory.value = []
+    } finally {
+      associateHistoryLoading.value = false
+    }
+  }
+
+  /**
    * Clear only the user-detail error state
    */
   const clearError = () => {
@@ -138,11 +225,22 @@ export function useUserManage() {
     relationsError,
     updating,
     updateError,
+    creating,
+    createError,
+    associateCreating,
+    associateCreateError,
+    associateHistory,
+    associateHistoryTotalCount,
+    associateHistoryLoading,
+    associateHistoryError,
 
     // Methods
     fetchUser,
     fetchUserRelations,
     updateUser,
+    createUser,
+    createAssociateForUser,
+    fetchAssociateHistory,
     clearError,
     clearRelationsError,
     clearUpdateError,
